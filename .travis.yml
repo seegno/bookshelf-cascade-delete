@@ -1,0 +1,15 @@
+language: node_js
+
+before_script:
+  - cp test/knexfile.js.dist test/knexfile.js
+  - psql -U postgres -c 'create database "bookshelf-cascade-delete";'
+
+node_js:
+  - "0.10"
+  - "4"
+  - "5"
+
+after_success:
+  - npm run coveralls
+
+sudo: false
