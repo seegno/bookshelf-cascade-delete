@@ -79,7 +79,7 @@ This plugin's code is heavily inspired on the [tkellen](https://github.com/tkell
 
 MIT
 
-[coveralls-image]: https://coveralls.io/repos/github/seegno/bookshelf-cascade-delete/badge.svg?branch=master
+[coveralls-image]: https://img.shields.io/coveralls/seegno/bookshelf-cascade-delete/master.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/seegno/bookshelf-cascade-delete?branch=master
 [npm-image]: https://img.shields.io/npm/v/bookshelf-cascade-delete.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/bookshelf-cascade-delete
