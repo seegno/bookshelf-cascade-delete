@@ -3,7 +3,7 @@
  * Module dependencies.
  */
 
-import Promise from 'bluebird';
+import { mapSeries } from 'bluebird';
 import { compact, flatten, reduce } from 'lodash';
 
 /**
@@ -12,10 +12,11 @@ import { compact, flatten, reduce } from 'lodash';
 
 export default Bookshelf => {
   const Model = Bookshelf.Model.prototype;
+  const client = Bookshelf.knex.client.config.client;
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
-      return Promise.map(this.constructor.recursiveDeletes(this.get('id'), options), query => query(transaction))
+      return mapSeries(this.constructor.recursiveDeletes(this.get('id'), options), query => query(transaction))
         .then(() => Model.destroy.call(this, {
           ...options,
           transacting: transaction
@@ -41,32 +42,33 @@ export default Bookshelf => {
       }
 
       return reduce(this.dependents, (result, dependent) => {
-        const { foreignKey, target } = this.prototype[dependent]().relatedData;
+        const { relatedData } = this.prototype[dependent]();
 
         return {
           ...result,
           [dependent]: {
-            dependents: target.dependencyMap(),
-            key: foreignKey,
-            model: target
+            dependents: relatedData.target.dependencyMap(),
+            key: relatedData.key('foreignKey'),
+            model: relatedData.target
           }
         };
       }, {});
     },
-    recursiveDeletes(parent, options) {
+    recursiveDeletes(parent) {
       // Stringify in case of parent being an instance of query.
       const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
 
       // Build delete queries for each dependent.
       const queries = reduce(this.dependencyMap(), (result, dependent) => {
+        const dependentKey = client === 'postgres' ? `"${dependent.key}"` : dependent.key;
         const tableName = dependent.model.prototype.tableName;
-        const whereClause = `"${dependent.key}" IN (${parentValue})`;
+        const whereClause = `${dependentKey} IN (${parentValue})`;
         const selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
 
         return [
           ...result,
           transaction => transaction(tableName).del().whereRaw(whereClause),
-          dependent.model.recursiveDeletes(selectQuery, options)
+          dependent.model.recursiveDeletes(selectQuery)
         ];
       }, []);
 
