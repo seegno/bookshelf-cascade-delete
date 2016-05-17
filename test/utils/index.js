@@ -1,15 +1,9 @@
 
 /**
- * Module dependencies.
- */
-
-import { repository } from '../fixtures/repository';
-
-/**
  * Export `recreateTables`.
  */
 
-export function recreateTables() {
+export function recreateTables(repository) {
   return repository.knex.schema
     .dropTableIfExists('Account')
     .dropTableIfExists('Comment')
@@ -20,15 +14,15 @@ export function recreateTables() {
     })
     .createTable('Account', table => {
       table.increments('id').primary();
-      table.integer('authorId').references('Author.id');
+      table.integer('authorId').unsigned().references('Author.id');
     })
     .createTable('Post', table => {
       table.increments('id').primary();
-      table.integer('authorId').references('Author.id');
+      table.integer('authorId').unsigned().references('Author.id');
     })
     .createTable('Comment', table => {
       table.increments('id').primary();
-      table.integer('postId').references('Post.id');
+      table.integer('postId').unsigned().references('Post.id');
     });
 }
 
@@ -36,7 +30,7 @@ export function recreateTables() {
  * Export `clearTables`.
  */
 
-export async function clearTables() {
+export async function clearTables(repository) {
   await repository.knex('Account').del();
   await repository.knex('Comment').del();
   await repository.knex('Post').del();
@@ -47,10 +41,43 @@ export async function clearTables() {
  * Export `dropTables`.
  */
 
-export function dropTables() {
+export function dropTables(repository) {
   return repository.knex.schema
     .dropTable('Account')
     .dropTable('Comment')
     .dropTable('Post')
     .dropTable('Author');
+}
+
+/**
+ * Export `fixtures`.
+ */
+
+export function fixtures(repository) {
+  const Account = repository.Model.extend({ tableName: 'Account' });
+
+  const Comment = repository.Model.extend({ tableName: 'Comment' });
+
+  const Post = repository.Model.extend({
+    comments() {
+      return this.hasMany(Comment, 'postId');
+    },
+    tableName: 'Post'
+  }, {
+    dependents: ['comments']
+  });
+
+  const Author = repository.Model.extend({
+    account() {
+      return this.hasOne(Account, 'authorId');
+    },
+    posts() {
+      return this.hasMany(Post, 'authorId');
+    },
+    tableName: 'Author'
+  }, {
+    dependents: ['account', 'posts']
+  });
+
+  return { Account, Author, Comment, Post };
 }

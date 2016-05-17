@@ -1,0 +1,13 @@
+
+/**
+ * Export PostgreSQL knexfile.
+ */
+
+export default {
+  client: 'postgres',
+  connection: {
+    charset: 'utf8',
+    database: 'bookshelf-cascade-delete',
+    host: 'localhost'
+  }
+};
