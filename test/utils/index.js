@@ -20,15 +20,15 @@ export function recreateTables() {
     })
     .createTable('Account', table => {
       table.increments('id').primary();
-      table.integer('authorId').references('Author.id');
+      table.integer('authorId').unsigned().references('Author.id');
     })
     .createTable('Post', table => {
       table.increments('id').primary();
-      table.integer('authorId').references('Author.id');
+      table.integer('authorId').unsigned().references('Author.id');
     })
     .createTable('Comment', table => {
       table.increments('id').primary();
-      table.integer('postId').references('Post.id');
+      table.integer('postId').unsigned().references('Post.id');
     });
 }
 

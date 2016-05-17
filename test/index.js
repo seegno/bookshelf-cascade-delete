@@ -3,12 +3,16 @@
  * Module dependencies.
  */
 
+import knexfile from './knexfile.js';
 import should from 'should';
 import sinon from 'sinon';
 import { Account, Author, Comment, Post } from './fixtures/models';
 import { Accounts, Authors, Comments, Posts } from './fixtures/collections';
 import { Model, repository } from './fixtures/repository';
 import { clearTables, dropTables, recreateTables } from './utils';
+
+const DB_TYPE = knexfile.client;
+const ERR_CODE_FOREIGN_KEY_VIOLATION = DB_TYPE === 'postgres' ? '23503' : 'ER_ROW_IS_REFERENCED_2';
 
 /**
  * Test `bookshelf-cascade-delete` plugin.
@@ -37,7 +41,7 @@ describe('bookshelf-cascade-delete', () => {
 
       should.fail();
     } catch(e) {
-      e.code.should.equal('23503');
+      e.code.should.equal(ERR_CODE_FOREIGN_KEY_VIOLATION);
     }
   });
 
@@ -51,7 +55,7 @@ describe('bookshelf-cascade-delete', () => {
 
       should.fail();
     } catch(e) {
-      e.code.should.equal('23503');
+      e.code.should.equal(ERR_CODE_FOREIGN_KEY_VIOLATION);
     }
   });
 
