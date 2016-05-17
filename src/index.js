@@ -12,6 +12,7 @@ import { compact, flatten, reduce } from 'lodash';
 
 export default Bookshelf => {
   const Model = Bookshelf.Model.prototype;
+  const client = Bookshelf.knex.client.config.client;
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
@@ -60,7 +61,8 @@ export default Bookshelf => {
       // Build delete queries for each dependent.
       const queries = reduce(this.dependencyMap(), (result, dependent) => {
         const tableName = dependent.model.prototype.tableName;
-        const whereClause = `"${dependent.key}" IN (${parentValue})`;
+        const dependentKey = client === 'postgres' ? `"${dependent.key}"` : dependent.key;
+        const whereClause = `${dependentKey} IN (${parentValue})`;
         const selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
 
         return [
