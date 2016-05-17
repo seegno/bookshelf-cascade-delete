@@ -1,8 +1,13 @@
 language: node_js
 
+services:
+  - mysql
+
 before_script:
-  - cp test/knexfile.js.dist test/knexfile.js
+  - cp test/postgres.knexfile.js.dist test/postgres.knexfile.js
+  - cp test/mysql.knexfile.js.dist test/mysql.knexfile.js
   - psql -U postgres -c 'create database "bookshelf-cascade-delete";'
+  - mysql -e "create database \`bookshelf-cascade-delete\`;" -uroot
 
 node_js:
   - "0.10"
