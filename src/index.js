@@ -41,7 +41,9 @@ export default Bookshelf => {
       }
 
       return reduce(this.dependents, (result, dependent) => {
-        const { foreignKey, target } = this.prototype[dependent]().relatedData;
+        const relatedData = this.prototype[dependent]().relatedData;
+        const target = relatedData.target;
+        const foreignKey = relatedData.key('foreignKey');
 
         return {
           ...result,
@@ -55,17 +57,16 @@ export default Bookshelf => {
     },
     recursiveDeletes(parent, options) {
       // Stringify in case of parent being an instance of query.
-      const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
+      const parentValue = typeof parent === 'string' ? `'${parent}'` : parent.toString().split(',');
 
       // Build delete queries for each dependent.
       const queries = reduce(this.dependencyMap(), (result, dependent) => {
         const tableName = dependent.model.prototype.tableName;
-        const whereClause = `"${dependent.key}" IN (${parentValue})`;
-        const selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
+        const selectQuery = Bookshelf.knex(tableName).column('id').whereIn(dependent.key, parentValue);
 
         return [
           ...result,
-          transaction => transaction(tableName).del().whereRaw(whereClause),
+          transaction => transaction(tableName).del().whereIn(dependent.key, parentValue),
           dependent.model.recursiveDeletes(selectQuery, options)
         ];
       }, []);
