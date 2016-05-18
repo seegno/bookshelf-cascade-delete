@@ -3,7 +3,6 @@
  * Module dependencies.
  */
 
-import { clearTables, dropTables, fixtures, recreateTables } from './utils';
 import Bookshelf from 'bookshelf';
 import cascadeDelete from '../src';
 import knex from 'knex';
@@ -11,6 +10,7 @@ import mysqlKnexfile from './mysql.knexfile';
 import postgresKnexfile from './postgres.knexfile';
 import should from 'should';
 import sinon from 'sinon';
+import { clearTables, dropTables, fixtures, recreateTables } from './utils';
 
 /**
  * Test `bookshelf-cascade-delete` plugin.
@@ -81,7 +81,6 @@ describe('bookshelf-cascade-delete', () => {
       } catch (e) {
         e.message.should.equal('foobar');
       }
-
       const accounts = await Account.fetchAll();
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
@@ -182,7 +181,7 @@ describe('bookshelf-cascade-delete', () => {
 
     repository.plugin(cascadeDelete);
 
-    const { Account, Author, Comment, Post } = fixtures(repository);
+    const { Account, Author, Comment, Post, Category } = fixtures(repository);
 
     before(async () => {
       await recreateTables(repository);
@@ -321,7 +320,7 @@ describe('bookshelf-cascade-delete', () => {
       posts.length.should.equal(1);
     });
 
-    it('should call prototype method `destroy` with given `options`', async () => {
+    it('should call destroy prototype method with given `options`', async () => {
       sinon.spy(Model, 'destroy');
 
       const author = await Author.forge().save();
@@ -333,5 +332,13 @@ describe('bookshelf-cascade-delete', () => {
 
       sinon.restore(Model);
     });
+
+    it('should foreignKey', async () => {
+      const author = await Author.forge().save();
+      const post = await Post.forge().save({ authorId: author.get('id') });
+      await Category.forge().save({ post_id: post.get('id')});
+
+    });
+
   });
 });
