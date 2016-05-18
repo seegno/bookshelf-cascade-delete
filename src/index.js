@@ -44,7 +44,6 @@ export default Bookshelf => {
         const relatedData = this.prototype[dependent]().relatedData;
         const target = relatedData.target;
         const foreignKey = relatedData.key('foreignKey');
-
         return {
           ...result,
           [dependent]: {

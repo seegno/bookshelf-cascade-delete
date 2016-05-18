@@ -65,13 +65,18 @@ export function fixtures(repository) {
 
   const Comment = repository.Model.extend({ tableName: 'Comment' });
 
+  const Category = repository.Model.extend({ tableName: 'Category' });
+
   const Post = repository.Model.extend({
     comments() {
       return this.hasMany(Comment, 'postId');
     },
+    categories() {
+      return this.hasMany(Category);
+    },
     tableName: 'Post'
   }, {
-    dependents: ['comments']
+    dependents: ['comments', 'categories']
   });
 
   const Author = repository.Model.extend({
@@ -86,5 +91,5 @@ export function fixtures(repository) {
     dependents: ['account', 'posts']
   });
 
-  return { Account, Author, Comment, Post };
+  return { Account, Author, Comment, Post, Category };
 }
