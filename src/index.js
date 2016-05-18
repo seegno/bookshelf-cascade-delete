@@ -3,7 +3,6 @@
  * Module dependencies.
  */
 
-import Promise from 'bluebird';
 import { compact, flatten, reduce } from 'lodash';
 
 /**
@@ -16,7 +15,7 @@ export default Bookshelf => {
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
-      return Promise.map(this.constructor.recursiveDeletes(this.get('id'), options), query => query(transaction))
+      return Promise.all(this.constructor.recursiveDeletes(this.get('id'), options).map(query => query(transaction)))
         .then(() => Model.destroy.call(this, {
           ...options,
           transacting: transaction
@@ -56,7 +55,7 @@ export default Bookshelf => {
         };
       }, {});
     },
-    recursiveDeletes(parent, options) {
+    recursiveDeletes(parent) {
       // Stringify in case of parent being an instance of query.
       const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
 
@@ -70,7 +69,7 @@ export default Bookshelf => {
         return [
           ...result,
           transaction => transaction(tableName).del().whereRaw(whereClause),
-          dependent.model.recursiveDeletes(selectQuery, options)
+          dependent.model.recursiveDeletes(selectQuery)
         ];
       }, []);
 
