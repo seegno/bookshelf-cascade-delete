@@ -7,6 +7,7 @@ export function recreateTables(repository) {
   return repository.knex.schema
     .dropTableIfExists('Account')
     .dropTableIfExists('Comment')
+    .dropTableIfExists('Category')
     .dropTableIfExists('Post')
     .dropTableIfExists('Author')
     .createTable('Author', table => {
@@ -23,6 +24,10 @@ export function recreateTables(repository) {
     .createTable('Comment', table => {
       table.increments('id').primary();
       table.integer('postId').unsigned().references('Post.id');
+    })
+    .createTable('Category', table => {
+      table.increments('id').primary();
+      table.integer('post_id').unsigned().references('Post.id');
     });
 }
 
@@ -33,6 +38,7 @@ export function recreateTables(repository) {
 export async function clearTables(repository) {
   await repository.knex('Account').del();
   await repository.knex('Comment').del();
+  await repository.knex('Category').del();
   await repository.knex('Post').del();
   await repository.knex('Author').del();
 }
@@ -45,6 +51,7 @@ export function dropTables(repository) {
   return repository.knex.schema
     .dropTable('Account')
     .dropTable('Comment')
+    .dropTable('Category')
     .dropTable('Post')
     .dropTable('Author');
 }
