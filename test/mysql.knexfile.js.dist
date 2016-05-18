@@ -1,13 +1,14 @@
 
 /**
- * Export `knexfile`.
+ * Export MySQL knexfile.
  */
 
 export default {
-  client: 'postgres',
+  client: 'mysql',
   connection: {
     charset: 'utf8',
     database: 'bookshelf-cascade-delete',
-    host: 'localhost'
+    host: 'localhost',
+    user: 'root'
   }
 };
