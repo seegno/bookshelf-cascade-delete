@@ -3,6 +3,7 @@
  * Module dependencies.
  */
 
+import { mapSeries } from 'bluebird';
 import { compact, flatten, reduce } from 'lodash';
 
 /**
@@ -15,7 +16,7 @@ export default Bookshelf => {
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
-      return Promise.all(this.constructor.recursiveDeletes(this.get('id'), options).map(query => query(transaction)))
+      return mapSeries(this.constructor.recursiveDeletes(this.get('id'), options), query => query(transaction))
         .then(() => Model.destroy.call(this, {
           ...options,
           transacting: transaction
@@ -41,15 +42,14 @@ export default Bookshelf => {
       }
 
       return reduce(this.dependents, (result, dependent) => {
-        const relatedData = this.prototype[dependent]().relatedData;
-        const target = relatedData.target;
-        const foreignKey = relatedData.key('foreignKey');
+        const { relatedData } = this.prototype[dependent]();
+
         return {
           ...result,
           [dependent]: {
-            dependents: target.dependencyMap(),
-            key: foreignKey,
-            model: target
+            dependents: relatedData.target.dependencyMap(),
+            key: relatedData.key('foreignKey'),
+            model: relatedData.target
           }
         };
       }, {});

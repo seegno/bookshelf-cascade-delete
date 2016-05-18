@@ -34,10 +34,10 @@ describe('bookshelf-cascade-delete', () => {
     });
 
     after(async () => {
-     //await dropTables(repository);
+     await dropTables(repository);
     });
 
-    it.skip('should throw an error if model has no registered dependents', async () => {
+    it('should throw an error if model has no registered dependents', async () => {
       const author = await repository.Model.extend({ tableName: 'Author' }).forge().save();
 
       await Account.forge().save({ authorId: author.get('id') });
@@ -51,7 +51,7 @@ describe('bookshelf-cascade-delete', () => {
       }
     });
 
-    it.skip('should throw an error if model has dependents and `cascadeDelete` option is given as `false`', async () => {
+    it('should throw an error if model has dependents and `cascadeDelete` option is given as `false`', async () => {
       const author = await Author.forge().save();
 
       await Account.forge().save({ authorId: author.get('id') });
@@ -81,7 +81,6 @@ describe('bookshelf-cascade-delete', () => {
       } catch (e) {
         e.message.should.equal('foobar');
       }
-
       const accounts = await Account.fetchAll();
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
@@ -162,7 +161,7 @@ describe('bookshelf-cascade-delete', () => {
       posts.length.should.equal(1);
     });
 
-    it('should call destroy prototype method with given `options`', async () => {
+    it('should call prototype method `destroy` with given `options`', async () => {
       sinon.spy(Model, 'destroy');
 
       const author = await Author.forge().save();
