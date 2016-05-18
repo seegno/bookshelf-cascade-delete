@@ -65,7 +65,7 @@ var Author = bookshelf.Model.extend({
 
 ## Contributing
 
-Feel free to fork this repository and submit pull requests. To run the tests, duplicate the `test/knexfile.js.dist` file, update it to your needs and run:
+Feel free to fork this repository and submit pull requests. To run the tests, duplicate the `test/mysql.knexfile.js.dist` and `test/postgres.knexfile.js.dist` files, update them to your needs and run:
 
 ```sh
 $ npm test
