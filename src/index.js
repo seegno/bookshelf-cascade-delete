@@ -42,7 +42,9 @@ export default Bookshelf => {
       }
 
       return reduce(this.dependents, (result, dependent) => {
-        const { foreignKey, target } = this.prototype[dependent]().relatedData;
+        const relatedData = this.prototype[dependent]().relatedData;
+        const target = relatedData.target;
+        const foreignKey = relatedData.key('foreignKey');
 
         return {
           ...result,
