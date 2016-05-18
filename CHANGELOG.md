@@ -1,7 +1,20 @@
 # Changelog
 
-## [1.0.0](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.0)
+## [1.0.1](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.1)
 
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.0...1.0.1)
+
+**Closed issues:**
+
+- Error: Cannot find module 'babel-runtime/helpers/toConsumableArray' [\#3](https://github.com/seegno/bookshelf-cascade-delete/issues/3)
+
+**Merged pull requests:**
+
+- Fix dependent key value with MySQL client [\#7](https://github.com/seegno/bookshelf-cascade-delete/pull/7) ([ricardogama](https://github.com/ricardogama))
+- Add babel-runtime to dependencies [\#5](https://github.com/seegno/bookshelf-cascade-delete/pull/5) ([ricardogama](https://github.com/ricardogama))
+- Update coveralls image badge to square [\#2](https://github.com/seegno/bookshelf-cascade-delete/pull/2) ([nunorafaelrocha](https://github.com/nunorafaelrocha))
+
+## [1.0.0](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.0) (2016-04-21)
 **Merged pull requests:**
 
 - Add initial code [\#1](https://github.com/seegno/bookshelf-cascade-delete/pull/1) ([ricardogama](https://github.com/ricardogama))

@@ -18,8 +18,6 @@ var _extends4 = _interopRequireDefault(_extends3);
 
 var _bluebird = require('bluebird');
 
-var _bluebird2 = _interopRequireDefault(_bluebird);
-
 var _lodash = require('lodash');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -34,12 +32,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = function (Bookshelf) {
   var Model = Bookshelf.Model.prototype;
+  var client = Bookshelf.knex.client.config.client;
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete: function cascadeDelete(transaction, options) {
       var _this = this;
 
-      return _bluebird2.default.map(this.constructor.recursiveDeletes(this.get('id'), options), function (query) {
+      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get('id'), options), function (query) {
         return query(transaction);
       }).then(function () {
         return Model.destroy.call(_this, (0, _extends4.default)({}, options, {
@@ -73,32 +72,32 @@ exports.default = function (Bookshelf) {
       }
 
       return (0, _lodash.reduce)(this.dependents, function (result, dependent) {
-        var _prototype$dependent$ = _this3.prototype[dependent]().relatedData;
+        var _prototype$dependent = _this3.prototype[dependent]();
 
-        var foreignKey = _prototype$dependent$.foreignKey;
-        var target = _prototype$dependent$.target;
+        var relatedData = _prototype$dependent.relatedData;
 
 
         return (0, _extends4.default)({}, result, (0, _defineProperty3.default)({}, dependent, {
-          dependents: target.dependencyMap(),
-          key: foreignKey,
-          model: target
+          dependents: relatedData.target.dependencyMap(),
+          key: relatedData.key('foreignKey'),
+          model: relatedData.target
         }));
       }, {});
     },
-    recursiveDeletes: function recursiveDeletes(parent, options) {
+    recursiveDeletes: function recursiveDeletes(parent) {
       // Stringify in case of parent being an instance of query.
       var parentValue = typeof parent === 'number' || typeof parent === 'string' ? '\'' + parent + '\'' : parent.toString();
 
       // Build delete queries for each dependent.
       var queries = (0, _lodash.reduce)(this.dependencyMap(), function (result, dependent) {
+        var dependentKey = client === 'postgres' ? '"' + dependent.key + '"' : dependent.key;
         var tableName = dependent.model.prototype.tableName;
-        var whereClause = '"' + dependent.key + '" IN (' + parentValue + ')';
+        var whereClause = dependentKey + ' IN (' + parentValue + ')';
         var selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
 
         return [].concat((0, _toConsumableArray3.default)(result), [function (transaction) {
           return transaction(tableName).del().whereRaw(whereClause);
-        }, dependent.model.recursiveDeletes(selectQuery, options)]);
+        }, dependent.model.recursiveDeletes(selectQuery)]);
       }, []);
 
       return (0, _lodash.flatten)((0, _lodash.compact)(queries)).reverse();
