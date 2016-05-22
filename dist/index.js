@@ -38,7 +38,7 @@ exports.default = function (Bookshelf) {
     cascadeDelete: function cascadeDelete(transaction, options) {
       var _this = this;
 
-      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get('id'), options), function (query) {
+      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get(this.idAttribute), options), function (query) {
         return query(transaction);
       }).then(function () {
         return Model.destroy.call(_this, (0, _extends4.default)({}, options, {
@@ -89,15 +89,18 @@ exports.default = function (Bookshelf) {
       var parentValue = typeof parent === 'number' || typeof parent === 'string' ? '\'' + parent + '\'' : parent.toString();
 
       // Build delete queries for each dependent.
-      var queries = (0, _lodash.reduce)(this.dependencyMap(), function (result, dependent) {
-        var dependentKey = client === 'postgres' ? '"' + dependent.key + '"' : dependent.key;
-        var tableName = dependent.model.prototype.tableName;
-        var whereClause = dependentKey + ' IN (' + parentValue + ')';
-        var selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
+      var queries = (0, _lodash.reduce)(this.dependencyMap(), function (result, _ref) {
+        var key = _ref.key;
+        var model = _ref.model;
+        var _model$prototype = model.prototype;
+        var idAttribute = _model$prototype.idAttribute;
+        var tableName = _model$prototype.tableName;
+
+        var whereClause = (client === 'postgres' ? '"' + key + '"' : key) + ' IN (' + parentValue + ')';
 
         return [].concat((0, _toConsumableArray3.default)(result), [function (transaction) {
           return transaction(tableName).del().whereRaw(whereClause);
-        }, dependent.model.recursiveDeletes(selectQuery)]);
+        }, model.recursiveDeletes(Bookshelf.knex(tableName).column(idAttribute).whereRaw(whereClause))]);
       }, []);
 
       return (0, _lodash.flatten)((0, _lodash.compact)(queries)).reverse();

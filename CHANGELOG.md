@@ -1,7 +1,18 @@
 # Changelog
 
-## [1.0.1](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.1)
+## [1.0.2](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.2)
 
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.1...1.0.2)
+
+**Closed issues:**
+
+- Does not account for non-default idAttribute name [\#11](https://github.com/seegno/bookshelf-cascade-delete/issues/11)
+
+**Merged pull requests:**
+
+- Fix destroying models with non default id attribute [\#12](https://github.com/seegno/bookshelf-cascade-delete/pull/12) ([ricardogama](https://github.com/ricardogama))
+
+## [1.0.1](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.1) (2016-05-18)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.0...1.0.1)
 
 **Closed issues:**
