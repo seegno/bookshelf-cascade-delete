@@ -10,19 +10,19 @@ export function recreateTables(repository) {
     .dropTableIfExists('Post')
     .dropTableIfExists('Author')
     .createTable('Author', table => {
-      table.increments('id').primary();
+      table.increments('author_id').primary();
     })
     .createTable('Account', table => {
-      table.increments('id').primary();
-      table.integer('authorId').unsigned().references('Author.id');
+      table.increments('account_id').primary();
+      table.integer('authorId').unsigned().references('Author.author_id');
     })
     .createTable('Post', table => {
-      table.increments('id').primary();
-      table.integer('authorId').unsigned().references('Author.id');
+      table.increments('post_id').primary();
+      table.integer('authorId').unsigned().references('Author.author_id');
     })
     .createTable('Comment', table => {
-      table.increments('id').primary();
-      table.integer('postId').unsigned().references('Post.id');
+      table.increments('comment_id').primary();
+      table.integer('postId').unsigned().references('Post.post_id');
     });
 }
 
@@ -54,13 +54,21 @@ export function dropTables(repository) {
  */
 
 export function fixtures(repository) {
-  const Account = repository.Model.extend({ tableName: 'Account' });
-  const Comment = repository.Model.extend({ tableName: 'Comment' });
+  const Account = repository.Model.extend({
+    idAttribute: 'account_id',
+    tableName: 'Account'
+  });
+
+  const Comment = repository.Model.extend({
+    idAttribute: 'comment_id',
+    tableName: 'Comment'
+  });
 
   const Post = repository.Model.extend({
     comments() {
       return this.hasMany(Comment, 'postId');
     },
+    idAttribute: 'post_id',
     tableName: 'Post'
   }, {
     dependents: ['comments']
@@ -70,6 +78,7 @@ export function fixtures(repository) {
     account() {
       return this.hasOne(Account, 'authorId');
     },
+    idAttribute: 'author_id',
     posts() {
       return this.hasMany(Post, 'authorId');
     },

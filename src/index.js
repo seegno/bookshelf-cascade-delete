@@ -16,7 +16,7 @@ export default Bookshelf => {
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
-      return mapSeries(this.constructor.recursiveDeletes(this.get('id'), options), query => query(transaction))
+      return mapSeries(this.constructor.recursiveDeletes(this.get(this.idAttribute), options), query => query(transaction))
         .then(() => Model.destroy.call(this, {
           ...options,
           transacting: transaction
@@ -59,16 +59,14 @@ export default Bookshelf => {
       const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
 
       // Build delete queries for each dependent.
-      const queries = reduce(this.dependencyMap(), (result, dependent) => {
-        const dependentKey = client === 'postgres' ? `"${dependent.key}"` : dependent.key;
-        const tableName = dependent.model.prototype.tableName;
-        const whereClause = `${dependentKey} IN (${parentValue})`;
-        const selectQuery = Bookshelf.knex(tableName).column('id').whereRaw(whereClause);
+      const queries = reduce(this.dependencyMap(), (result, { key, model }) => {
+        const { idAttribute, tableName } = model.prototype;
+        const whereClause = `${client === 'postgres' ? `"${key}"` : key} IN (${parentValue})`;
 
         return [
           ...result,
           transaction => transaction(tableName).del().whereRaw(whereClause),
-          dependent.model.recursiveDeletes(selectQuery)
+          model.recursiveDeletes(Bookshelf.knex(tableName).column(idAttribute).whereRaw(whereClause))
         ];
       }, []);
 
