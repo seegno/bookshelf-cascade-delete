@@ -3,7 +3,6 @@
  * Module dependencies.
  */
 
-import { clearTables, dropTables, fixtures, recreateTables } from './utils';
 import Bookshelf from 'bookshelf';
 import cascadeDelete from '../src';
 import knex from 'knex';
@@ -11,6 +10,7 @@ import mysqlKnexfile from './mysql.knexfile';
 import postgresKnexfile from './postgres.knexfile';
 import should from 'should';
 import sinon from 'sinon';
+import { clearTables, dropTables, fixtures, recreateTables } from './utils';
 
 /**
  * Test `bookshelf-cascade-delete` plugin.
@@ -38,9 +38,9 @@ describe('bookshelf-cascade-delete', () => {
     });
 
     it('should throw an error if model has no registered dependents', async () => {
-      const author = await repository.Model.extend({ tableName: 'Author' }).forge().save();
+      const author = await repository.Model.extend({ idAttribute: 'author_id', tableName: 'Author' }).forge().save();
 
-      await Account.forge().save({ authorId: author.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
 
       try {
         await author.destroy();
@@ -54,7 +54,7 @@ describe('bookshelf-cascade-delete', () => {
     it('should throw an error if model has dependents and `cascadeDelete` option is given as `false`', async () => {
       const author = await Author.forge().save();
 
-      await Account.forge().save({ authorId: author.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
 
       try {
         await author.destroy({ cascadeDelete: false });
@@ -67,10 +67,10 @@ describe('bookshelf-cascade-delete', () => {
 
     it('should not delete model and its dependents if an error is thrown on destroy', async () => {
       const author = await Author.forge().save();
-      const post = await Post.forge().save({ authorId: author.get('id') });
+      const post = await Post.forge().save({ authorId: author.get('author_id') });
 
-      await Account.forge().save({ authorId: author.get('id') });
-      await Comment.forge().save({ postId: post.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
+      await Comment.forge().save({ postId: post.get('post_id') });
 
       sinon.stub(Model, 'destroy').throws(new Error('foobar'));
 
@@ -118,12 +118,12 @@ describe('bookshelf-cascade-delete', () => {
 
     it('should delete model and all its dependents', async () => {
       const author = await Author.forge().save();
-      const post1 = await Post.forge().save({ authorId: author.get('id') });
-      const post2 = await Post.forge().save({ authorId: author.get('id') });
+      const post1 = await Post.forge().save({ authorId: author.get('author_id') });
+      const post2 = await Post.forge().save({ authorId: author.get('author_id') });
 
-      await Account.forge().save({ authorId: author.get('id') });
-      await Comment.forge().save({ postId: post1.get('id') });
-      await Comment.forge().save({ postId: post2.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
+      await Comment.forge().save({ postId: post1.get('post_id') });
+      await Comment.forge().save({ postId: post2.get('post_id') });
 
       await author.destroy();
 
@@ -141,13 +141,13 @@ describe('bookshelf-cascade-delete', () => {
     it('should not delete models which are not dependent', async () => {
       const author1 = await Author.forge().save();
       const author2 = await Author.forge().save();
-      const post1 = await Post.forge().save({ authorId: author1.get('id') });
-      const post2 = await Post.forge().save({ authorId: author2.get('id') });
+      const post1 = await Post.forge().save({ authorId: author1.get('author_id') });
+      const post2 = await Post.forge().save({ authorId: author2.get('author_id') });
 
-      await Account.forge().save({ authorId: author1.get('id') });
-      await Account.forge().save({ authorId: author2.get('id') });
-      await Comment.forge().save({ postId: post1.get('id') });
-      await Comment.forge().save({ postId: post2.get('id') });
+      await Account.forge().save({ authorId: author1.get('author_id') });
+      await Account.forge().save({ authorId: author2.get('author_id') });
+      await Comment.forge().save({ postId: post1.get('post_id') });
+      await Comment.forge().save({ postId: post2.get('post_id') });
 
       await author1.destroy();
 
@@ -197,9 +197,9 @@ describe('bookshelf-cascade-delete', () => {
     });
 
     it('should throw an error if model has no registered dependents', async () => {
-      const author = await repository.Model.extend({ tableName: 'Author' }).forge().save();
+      const author = await repository.Model.extend({ idAttribute: 'author_id', tableName: 'Author' }).forge().save();
 
-      await Account.forge().save({ authorId: author.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
 
       try {
         await author.destroy();
@@ -213,7 +213,7 @@ describe('bookshelf-cascade-delete', () => {
     it('should throw an error if model has dependents and `cascadeDelete` option is given as `false`', async () => {
       const author = await Author.forge().save();
 
-      await Account.forge().save({ authorId: author.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
 
       try {
         await author.destroy({ cascadeDelete: false });
@@ -226,10 +226,10 @@ describe('bookshelf-cascade-delete', () => {
 
     it('should not delete model and its dependents if an error is thrown on destroy', async () => {
       const author = await Author.forge().save();
-      const post = await Post.forge().save({ authorId: author.get('id') });
+      const post = await Post.forge().save({ authorId: author.get('author_id') });
 
-      await Account.forge().save({ authorId: author.get('id') });
-      await Comment.forge().save({ postId: post.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
+      await Comment.forge().save({ postId: post.get('post_id') });
 
       sinon.stub(Model, 'destroy').throws(new Error('foobar'));
 
@@ -277,12 +277,12 @@ describe('bookshelf-cascade-delete', () => {
 
     it('should delete model and all its dependents', async () => {
       const author = await Author.forge().save();
-      const post1 = await Post.forge().save({ authorId: author.get('id') });
-      const post2 = await Post.forge().save({ authorId: author.get('id') });
+      const post1 = await Post.forge().save({ authorId: author.get('author_id') });
+      const post2 = await Post.forge().save({ authorId: author.get('author_id') });
 
-      await Account.forge().save({ authorId: author.get('id') });
-      await Comment.forge().save({ postId: post1.get('id') });
-      await Comment.forge().save({ postId: post2.get('id') });
+      await Account.forge().save({ authorId: author.get('author_id') });
+      await Comment.forge().save({ postId: post1.get('post_id') });
+      await Comment.forge().save({ postId: post2.get('post_id') });
 
       await author.destroy();
 
@@ -300,13 +300,13 @@ describe('bookshelf-cascade-delete', () => {
     it('should not delete models which are not dependent', async () => {
       const author1 = await Author.forge().save();
       const author2 = await Author.forge().save();
-      const post1 = await Post.forge().save({ authorId: author1.get('id') });
-      const post2 = await Post.forge().save({ authorId: author2.get('id') });
+      const post1 = await Post.forge().save({ authorId: author1.get('author_id') });
+      const post2 = await Post.forge().save({ authorId: author2.get('author_id') });
 
-      await Account.forge().save({ authorId: author1.get('id') });
-      await Account.forge().save({ authorId: author2.get('id') });
-      await Comment.forge().save({ postId: post1.get('id') });
-      await Comment.forge().save({ postId: post2.get('id') });
+      await Account.forge().save({ authorId: author1.get('author_id') });
+      await Account.forge().save({ authorId: author2.get('author_id') });
+      await Comment.forge().save({ postId: post1.get('post_id') });
+      await Comment.forge().save({ postId: post2.get('post_id') });
 
       await author1.destroy();
 
