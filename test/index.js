@@ -23,7 +23,7 @@ describe('bookshelf-cascade-delete', () => {
 
     repository.plugin(cascadeDelete);
 
-    const { Account, Author, Comment, Post } = fixtures(repository);
+    const { Account, Author, Comment, Post, Tag, TagPost } = fixtures(repository);
 
     before(async () => {
       await recreateTables(repository);
@@ -34,7 +34,7 @@ describe('bookshelf-cascade-delete', () => {
     });
 
     after(async () => {
-     await dropTables(repository);
+      await dropTables(repository);
     });
 
     it('should throw an error if model has no registered dependents', async () => {
@@ -120,10 +120,14 @@ describe('bookshelf-cascade-delete', () => {
       const author = await Author.forge().save();
       const post1 = await Post.forge().save({ authorId: author.get('author_id') });
       const post2 = await Post.forge().save({ authorId: author.get('author_id') });
+      const tag1 = await Tag.forge().save();
+      const tag2 = await Tag.forge().save();
 
       await Account.forge().save({ authorId: author.get('author_id') });
       await Comment.forge().save({ postId: post1.get('post_id') });
       await Comment.forge().save({ postId: post2.get('post_id') });
+      await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
+      await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
       await author.destroy();
 
@@ -131,11 +135,13 @@ describe('bookshelf-cascade-delete', () => {
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
       const posts = await Post.fetchAll();
+      const tagPosts = await TagPost.fetchAll();
 
       accounts.length.should.equal(0);
       authors.length.should.equal(0);
       comments.length.should.equal(0);
       posts.length.should.equal(0);
+      tagPosts.length.should.equal(0);
     });
 
     it('should not delete models which are not dependent', async () => {
@@ -143,11 +149,15 @@ describe('bookshelf-cascade-delete', () => {
       const author2 = await Author.forge().save();
       const post1 = await Post.forge().save({ authorId: author1.get('author_id') });
       const post2 = await Post.forge().save({ authorId: author2.get('author_id') });
+      const tag1 = await Tag.forge().save();
+      const tag2 = await Tag.forge().save();
 
       await Account.forge().save({ authorId: author1.get('author_id') });
       await Account.forge().save({ authorId: author2.get('author_id') });
       await Comment.forge().save({ postId: post1.get('post_id') });
       await Comment.forge().save({ postId: post2.get('post_id') });
+      await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
+      await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
       await author1.destroy();
 
@@ -155,11 +165,13 @@ describe('bookshelf-cascade-delete', () => {
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
       const posts = await Post.fetchAll();
+      const tagPosts = await TagPost.fetchAll();
 
       accounts.length.should.equal(1);
       authors.length.should.equal(1);
       comments.length.should.equal(1);
       posts.length.should.equal(1);
+      tagPosts.length.should.equal(1);
     });
 
     it('should call prototype method `destroy` with given `options`', async () => {
@@ -182,7 +194,7 @@ describe('bookshelf-cascade-delete', () => {
 
     repository.plugin(cascadeDelete);
 
-    const { Account, Author, Comment, Post } = fixtures(repository);
+    const { Account, Author, Comment, Post, Tag, TagPost } = fixtures(repository);
 
     before(async () => {
       await recreateTables(repository);
@@ -279,10 +291,14 @@ describe('bookshelf-cascade-delete', () => {
       const author = await Author.forge().save();
       const post1 = await Post.forge().save({ authorId: author.get('author_id') });
       const post2 = await Post.forge().save({ authorId: author.get('author_id') });
+      const tag1 = await Tag.forge().save();
+      const tag2 = await Tag.forge().save();
 
       await Account.forge().save({ authorId: author.get('author_id') });
       await Comment.forge().save({ postId: post1.get('post_id') });
       await Comment.forge().save({ postId: post2.get('post_id') });
+      await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
+      await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
       await author.destroy();
 
@@ -290,11 +306,13 @@ describe('bookshelf-cascade-delete', () => {
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
       const posts = await Post.fetchAll();
+      const tagPosts = await TagPost.fetchAll();
 
       accounts.length.should.equal(0);
       authors.length.should.equal(0);
       comments.length.should.equal(0);
       posts.length.should.equal(0);
+      tagPosts.length.should.equal(0);
     });
 
     it('should not delete models which are not dependent', async () => {
@@ -302,11 +320,15 @@ describe('bookshelf-cascade-delete', () => {
       const author2 = await Author.forge().save();
       const post1 = await Post.forge().save({ authorId: author1.get('author_id') });
       const post2 = await Post.forge().save({ authorId: author2.get('author_id') });
+      const tag1 = await Tag.forge().save();
+      const tag2 = await Tag.forge().save();
 
       await Account.forge().save({ authorId: author1.get('author_id') });
       await Account.forge().save({ authorId: author2.get('author_id') });
       await Comment.forge().save({ postId: post1.get('post_id') });
       await Comment.forge().save({ postId: post2.get('post_id') });
+      await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
+      await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
       await author1.destroy();
 
@@ -314,11 +336,13 @@ describe('bookshelf-cascade-delete', () => {
       const authors = await Author.fetchAll();
       const comments = await Comment.fetchAll();
       const posts = await Post.fetchAll();
+      const tagPosts = await TagPost.fetchAll();
 
       accounts.length.should.equal(1);
       authors.length.should.equal(1);
       comments.length.should.equal(1);
       posts.length.should.equal(1);
+      tagPosts.length.should.equal(1);
     });
 
     it('should call prototype method `destroy` with given `options`', async () => {
