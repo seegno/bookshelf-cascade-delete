@@ -16,7 +16,7 @@ export default Bookshelf => {
 
   Bookshelf.Model = Bookshelf.Model.extend({
     cascadeDelete(transaction, options) {
-      return mapSeries(this.constructor.recursiveDeletes(this.get(this.idAttribute), options), query => query(transaction))
+      return mapSeries(this.constructor.recursiveDeletes(this.get(this.idAttribute) || this._knex.column(this.idAttribute), options), query => query(transaction))
         .then(() => Model.destroy.call(this, {
           ...options,
           transacting: transaction

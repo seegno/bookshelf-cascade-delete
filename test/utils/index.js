@@ -13,6 +13,7 @@ export function recreateTables(repository) {
     .dropTableIfExists('Author')
     .createTable('Author', table => {
       table.increments('author_id').primary();
+      table.string('name');
     })
     .createTable('Account', table => {
       table.increments('account_id').primary();
