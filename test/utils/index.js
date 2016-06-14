@@ -7,7 +7,9 @@ export function recreateTables(repository) {
   return repository.knex.schema
     .dropTableIfExists('Account')
     .dropTableIfExists('Comment')
+    .dropTableIfExists('TagPost')
     .dropTableIfExists('Post')
+    .dropTableIfExists('Tag')
     .dropTableIfExists('Author')
     .createTable('Author', table => {
       table.increments('author_id').primary();
@@ -16,9 +18,16 @@ export function recreateTables(repository) {
       table.increments('account_id').primary();
       table.integer('authorId').unsigned().references('Author.author_id');
     })
+    .createTable('Tag', table => {
+      table.increments('tag_id').primary();
+    })
     .createTable('Post', table => {
       table.increments('post_id').primary();
       table.integer('authorId').unsigned().references('Author.author_id');
+    })
+    .createTable('TagPost', table => {
+      table.integer('tagId').unsigned().references('Tag.tag_id');
+      table.integer('postId').unsigned().references('Post.post_id');
     })
     .createTable('Comment', table => {
       table.increments('comment_id').primary();
@@ -33,7 +42,9 @@ export function recreateTables(repository) {
 export async function clearTables(repository) {
   await repository.knex('Account').del();
   await repository.knex('Comment').del();
+  await repository.knex('TagPost').del();
   await repository.knex('Post').del();
+  await repository.knex('Tag').del();
   await repository.knex('Author').del();
 }
 
@@ -43,9 +54,11 @@ export async function clearTables(repository) {
 
 export function dropTables(repository) {
   return repository.knex.schema
+    .dropTable('TagPost')
     .dropTable('Account')
     .dropTable('Comment')
     .dropTable('Post')
+    .dropTable('Tag')
     .dropTable('Author');
 }
 
@@ -64,14 +77,27 @@ export function fixtures(repository) {
     tableName: 'Comment'
   });
 
+  const Tag = repository.Model.extend({
+    idAttribute: 'tag_id',
+    tableName: 'Tag'
+  });
+
+  const TagPost = repository.Model.extend({
+    idAttribute: null,
+    tableName: 'TagPost'
+  });
+
   const Post = repository.Model.extend({
     comments() {
       return this.hasMany(Comment, 'postId');
     },
+    tags() {
+      return this.belongsToMany(Tag, 'TagPost', 'postId', 'tagId');
+    },
     idAttribute: 'post_id',
     tableName: 'Post'
   }, {
-    dependents: ['comments']
+    dependents: ['comments', 'tags']
   });
 
   const Author = repository.Model.extend({
@@ -87,5 +113,5 @@ export function fixtures(repository) {
     dependents: ['account', 'posts']
   });
 
-  return { Account, Author, Comment, Post };
+  return { Account, Author, Comment, Post, Tag, TagPost };
 }

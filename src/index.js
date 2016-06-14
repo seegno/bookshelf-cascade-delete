@@ -36,20 +36,23 @@ export default Bookshelf => {
       return Bookshelf.knex.transaction(transaction => this.cascadeDelete(transaction, options));
     }
   }, {
-    dependencyMap() {
-      if (!this.dependents) {
+    dependencyMap(skipDependents = false) {
+      if (skipDependents || !this.dependents) {
         return;
       }
 
       return reduce(this.dependents, (result, dependent) => {
         const { relatedData } = this.prototype[dependent]();
+        const skipDependents = relatedData.type === 'belongsToMany';
 
         return {
           ...result,
           [dependent]: {
-            dependents: relatedData.target.dependencyMap(),
+            dependents: relatedData.target.dependencyMap(skipDependents),
             key: relatedData.key('foreignKey'),
-            model: relatedData.target
+            model: relatedData.target,
+            skipDependents,
+            tableName: skipDependents ? relatedData.joinTable() : relatedData.target.prototype.tableName
           }
         };
       }, {});
@@ -59,14 +62,13 @@ export default Bookshelf => {
       const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
 
       // Build delete queries for each dependent.
-      const queries = reduce(this.dependencyMap(), (result, { key, model }) => {
-        const { idAttribute, tableName } = model.prototype;
+      const queries = reduce(this.dependencyMap(), (result, { tableName, key, model, skipDependents }) => {
         const whereClause = `${client === 'postgres' ? `"${key}"` : key} IN (${parentValue})`;
 
         return [
           ...result,
           transaction => transaction(tableName).del().whereRaw(whereClause),
-          model.recursiveDeletes(Bookshelf.knex(tableName).column(idAttribute).whereRaw(whereClause))
+          skipDependents ? [] : model.recursiveDeletes(Bookshelf.knex(tableName).column(model.prototype.idAttribute).whereRaw(whereClause))
         ];
       }, []);
 
