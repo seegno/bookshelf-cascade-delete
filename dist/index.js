@@ -67,7 +67,9 @@ exports.default = function (Bookshelf) {
     dependencyMap: function dependencyMap() {
       var _this3 = this;
 
-      if (!this.dependents) {
+      var skipDependents = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
+
+      if (skipDependents || !this.dependents) {
         return;
       }
 
@@ -76,11 +78,14 @@ exports.default = function (Bookshelf) {
 
         var relatedData = _prototype$dependent.relatedData;
 
+        var skipDependents = relatedData.type === 'belongsToMany';
 
         return (0, _extends4.default)({}, result, (0, _defineProperty3.default)({}, dependent, {
-          dependents: relatedData.target.dependencyMap(),
+          dependents: relatedData.target.dependencyMap(skipDependents),
           key: relatedData.key('foreignKey'),
-          model: relatedData.target
+          model: relatedData.target,
+          skipDependents: skipDependents,
+          tableName: skipDependents ? relatedData.joinTable() : relatedData.target.prototype.tableName
         }));
       }, {});
     },
@@ -90,17 +95,16 @@ exports.default = function (Bookshelf) {
 
       // Build delete queries for each dependent.
       var queries = (0, _lodash.reduce)(this.dependencyMap(), function (result, _ref) {
+        var tableName = _ref.tableName;
         var key = _ref.key;
         var model = _ref.model;
-        var _model$prototype = model.prototype;
-        var idAttribute = _model$prototype.idAttribute;
-        var tableName = _model$prototype.tableName;
+        var skipDependents = _ref.skipDependents;
 
         var whereClause = (client === 'postgres' ? '"' + key + '"' : key) + ' IN (' + parentValue + ')';
 
         return [].concat((0, _toConsumableArray3.default)(result), [function (transaction) {
           return transaction(tableName).del().whereRaw(whereClause);
-        }, model.recursiveDeletes(Bookshelf.knex(tableName).column(idAttribute).whereRaw(whereClause))]);
+        }, skipDependents ? [] : model.recursiveDeletes(Bookshelf.knex(tableName).column(model.prototype.idAttribute).whereRaw(whereClause))]);
       }, []);
 
       return (0, _lodash.flatten)((0, _lodash.compact)(queries)).reverse();

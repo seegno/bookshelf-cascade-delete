@@ -1,7 +1,18 @@
 # Changelog
 
-## [1.0.2](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.2)
+## [1.0.3](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.3)
 
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.2...1.0.3)
+
+**Closed issues:**
+
+- many to many, junction table. [\#13](https://github.com/seegno/bookshelf-cascade-delete/issues/13)
+
+**Merged pull requests:**
+
+- Fix destroying models with many-to-many relations [\#15](https://github.com/seegno/bookshelf-cascade-delete/pull/15) ([ricardogama](https://github.com/ricardogama))
+
+## [1.0.2](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.2) (2016-05-22)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.1...1.0.2)
 
 **Closed issues:**

@@ -1,6 +1,6 @@
 {
   "name": "bookshelf-cascade-delete",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Cascade delete with Bookshelf.js",
   "license": "MIT",
   "author": {
