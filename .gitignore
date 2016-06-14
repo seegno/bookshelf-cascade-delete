@@ -1,4 +1,4 @@
 /node_modules
 /test/coverage
-/test/mysql.knexfile.js
-/test/postgres.knexfile.js
+/test/mysql/knexfile.js
+/test/postgres/knexfile.js
