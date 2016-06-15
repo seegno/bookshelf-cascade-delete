@@ -1,7 +1,20 @@
 # Changelog
 
-## [1.0.3](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.3)
+## [1.0.4](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.4)
 
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.3...1.0.4)
+
+**Closed issues:**
+
+- Destroying with where clause [\#14](https://github.com/seegno/bookshelf-cascade-delete/issues/14)
+
+**Merged pull requests:**
+
+- Update README.md contributing section [\#18](https://github.com/seegno/bookshelf-cascade-delete/pull/18) ([abelsoares](https://github.com/abelsoares))
+- Fix cascade delete with queried models [\#17](https://github.com/seegno/bookshelf-cascade-delete/pull/17) ([ricardogama](https://github.com/ricardogama))
+- Add a test file for each database engine [\#16](https://github.com/seegno/bookshelf-cascade-delete/pull/16) ([ricardogama](https://github.com/ricardogama))
+
+## [1.0.3](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.3) (2016-06-14)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.2...1.0.3)
 
 **Closed issues:**

@@ -38,7 +38,7 @@ exports.default = function (Bookshelf) {
     cascadeDelete: function cascadeDelete(transaction, options) {
       var _this = this;
 
-      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get(this.idAttribute), options), function (query) {
+      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get(this.idAttribute) || this._knex.column(this.idAttribute), options), function (query) {
         return query(transaction);
       }).then(function () {
         return Model.destroy.call(_this, (0, _extends4.default)({}, options, {
