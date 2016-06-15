@@ -65,11 +65,36 @@ var Author = bookshelf.Model.extend({
 
 ## Contributing
 
-Feel free to fork this repository and submit pull requests. To run the tests, duplicate the `test/mysql.knexfile.js.dist` and `test/postgres.knexfile.js.dist` files, update them to your needs and run:
+Contributions are welcome and greatly appreciated, so feel free to fork this repository and submit pull requests.  
+
+**bookshelf-cascade-delete** supports PostgreSQL and MySQL. You can find test suites for each of these database engines in the *test/postgres* and *test/mysql* folders.
+
+### Setting up
+
+- Fork and clone the **bookshelf-cascade-delete** repository.
+- Duplicate *test/postgres/knexfile.js.dist* and *test/mysql/knexfile.js.dist* files and update them to your needs.
+- Make sure all the tests pass:
 
 ```sh
 $ npm test
 ```
+
+### Linting
+
+**bookshelf-cascade-delete** enforces linting using [ESLint](http://eslint.org/) with the [Seegno-flavored ESLint config](https://github.com/seegno/eslint-config-seegno). We recommend you to install an eslint plugin in your editor of choice, although you can run the linter anytime with:
+
+```sh
+$ eslint src test
+```
+
+### Pull Request
+
+Please follow these advices to simplify the pull request workflow:
+
+- If you add or enhance functionality, an update of *README.md* usage section should be part of the PR.  
+- If your PR fixes a bug you should include tests that at least fail before your code changes and pass after.  
+- Keep your branch rebased and fix all conflicts before submitting.  
+- Make sure Travis build status is ok.
 
 ## Credits
 
@@ -77,7 +102,7 @@ This plugin's code is heavily inspired on the [tkellen](https://github.com/tkell
 
 ## License
 
-MIT
+[MIT](https://opensource.org/licenses/MIT)
 
 [coveralls-image]: https://img.shields.io/coveralls/seegno/bookshelf-cascade-delete/master.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/seegno/bookshelf-cascade-delete?branch=master
