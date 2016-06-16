@@ -108,5 +108,5 @@ This plugin's code is heavily inspired on the [tkellen](https://github.com/tkell
 [coveralls-url]: https://coveralls.io/github/seegno/bookshelf-cascade-delete?branch=master
 [npm-image]: https://img.shields.io/npm/v/bookshelf-cascade-delete.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/bookshelf-cascade-delete
-[travis-image]: https://img.shields.io/travis/seegno/bookshelf-cascade-delete.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/seegno/bookshelf-cascade-delete/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/seegno/bookshelf-cascade-delete
