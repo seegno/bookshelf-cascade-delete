@@ -27,12 +27,14 @@
     "mocha": "--compilers js:babel-register --bail test/index.js"
   },
   "scripts": {
-    "build": "rm -rf dist && babel src --out-dir dist",
-    "changelog": "github_changelog_generator --bug-labels --enhancement-labels --header-label='# Changelog'",
+    "changelog": "github_changelog_generator --bug-labels --enhancement-labels --future-release=$npm_config_release --header-label='# Changelog'",
     "cover": "babel-node node_modules/.bin/isparta cover $npm_package_options_isparta _mocha -- $npm_package_options_mocha",
     "coveralls": "npm run cover && cat ./test/coverage/lcov.info | coveralls",
     "lint": "git diff --cached --name-only --diff-filter=ACMRTUXB | grep -E '\\.(js)(\\..+)?$' | xargs eslint",
-    "test": "mocha $npm_package_options_mocha"
+    "release": "npm run changelog && npm run version && npm run transpile && git add -A && git commit -n -m \"Release $npm_config_release\"",
+    "test": "mocha $npm_package_options_mocha",
+    "transpile": "rm -rf dist && babel src --out-dir dist",
+    "version": "sed -i '' 's/\\(\"version\": \"\\)'\"$npm_package_version\"'\\(\"\\)/\\1'\"$npm_config_release\"'\\2/' package.json"
   },
   "dependencies": {
     "babel-runtime": "^6.6.1",
