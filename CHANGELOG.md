@@ -1,7 +1,15 @@
 # Changelog
 
-## [1.0.4](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.4)
+## [1.0.5](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.5) (2016-07-20)
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.4...1.0.5)
 
+**Merged pull requests:**
+
+- Add release script [\#21](https://github.com/seegno/bookshelf-cascade-delete/pull/21) ([ricardogama](https://github.com/ricardogama))
+- Fix cascade delete on third level dependents [\#20](https://github.com/seegno/bookshelf-cascade-delete/pull/20) ([ricardogama](https://github.com/ricardogama))
+- Update Travis badge to get master branch status [\#19](https://github.com/seegno/bookshelf-cascade-delete/pull/19) ([ricardogama](https://github.com/ricardogama))
+
+## [1.0.4](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.4) (2016-06-15)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.3...1.0.4)
 
 **Closed issues:**

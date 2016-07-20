@@ -8,13 +8,9 @@ var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
 
 var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
 
-var _defineProperty2 = require('babel-runtime/helpers/defineProperty');
+var _extends2 = require('babel-runtime/helpers/extends');
 
-var _defineProperty3 = _interopRequireDefault(_defineProperty2);
-
-var _extends3 = require('babel-runtime/helpers/extends');
-
-var _extends4 = _interopRequireDefault(_extends3);
+var _extends3 = _interopRequireDefault(_extends2);
 
 var _bluebird = require('bluebird');
 
@@ -38,10 +34,12 @@ exports.default = function (Bookshelf) {
     cascadeDelete: function cascadeDelete(transaction, options) {
       var _this = this;
 
-      return (0, _bluebird.mapSeries)(this.constructor.recursiveDeletes(this.get(this.idAttribute) || this._knex.column(this.idAttribute), options), function (query) {
+      var queries = this.constructor.recursiveDeletes(this.get(this.idAttribute) || this._knex.column(this.idAttribute), options);
+
+      return (0, _bluebird.mapSeries)((0, _lodash.flattenDeep)(queries).reverse(), function (query) {
         return query(transaction);
       }).then(function () {
-        return Model.destroy.call(_this, (0, _extends4.default)({}, options, {
+        return Model.destroy.call(_this, (0, _extends3.default)({}, options, {
           transacting: transaction
         }));
       });
@@ -80,21 +78,21 @@ exports.default = function (Bookshelf) {
 
         var skipDependents = relatedData.type === 'belongsToMany';
 
-        return (0, _extends4.default)({}, result, (0, _defineProperty3.default)({}, dependent, {
+        return [].concat((0, _toConsumableArray3.default)(result), [{
           dependents: relatedData.target.dependencyMap(skipDependents),
           key: relatedData.key('foreignKey'),
           model: relatedData.target,
           skipDependents: skipDependents,
           tableName: skipDependents ? relatedData.joinTable() : relatedData.target.prototype.tableName
-        }));
-      }, {});
+        }]);
+      }, []);
     },
     recursiveDeletes: function recursiveDeletes(parent) {
       // Stringify in case of parent being an instance of query.
       var parentValue = typeof parent === 'number' || typeof parent === 'string' ? '\'' + parent + '\'' : parent.toString();
 
       // Build delete queries for each dependent.
-      var queries = (0, _lodash.reduce)(this.dependencyMap(), function (result, _ref) {
+      return (0, _lodash.reduce)(this.dependencyMap(), function (result, _ref) {
         var tableName = _ref.tableName;
         var key = _ref.key;
         var model = _ref.model;
@@ -106,8 +104,6 @@ exports.default = function (Bookshelf) {
           return transaction(tableName).del().whereRaw(whereClause);
         }, skipDependents ? [] : model.recursiveDeletes(Bookshelf.knex(tableName).column(model.prototype.idAttribute).whereRaw(whereClause))]);
       }, []);
-
-      return (0, _lodash.flatten)((0, _lodash.compact)(queries)).reverse();
     }
   });
 };
