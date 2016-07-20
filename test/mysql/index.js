@@ -21,7 +21,7 @@ describe('with MySQL client', () => {
 
   repository.plugin(cascadeDelete);
 
-  const { Account, Author, Comment, Post, Tag, TagPost } = fixtures(repository);
+  const { Account, Author, Comment, Commenter, Post, Tag, TagPost } = fixtures(repository);
 
   before(async () => {
     await recreateTables(repository);
@@ -66,9 +66,10 @@ describe('with MySQL client', () => {
   it('should not delete model and its dependents if an error is thrown on destroy', async () => {
     const author = await Author.forge().save();
     const post = await Post.forge().save({ authorId: author.get('author_id') });
+    const comment = await Comment.forge().save({ postId: post.get('post_id') });
 
     await Account.forge().save({ authorId: author.get('author_id') });
-    await Comment.forge().save({ postId: post.get('post_id') });
+    await Commenter.forge().save({ commentId: comment.get('comment_id') });
 
     sinon.stub(Model, 'destroy').throws(new Error('foobar'));
 
@@ -82,11 +83,13 @@ describe('with MySQL client', () => {
 
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
+    const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const posts = await Post.fetchAll();
 
     accounts.length.should.equal(1);
     authors.length.should.equal(1);
+    commenters.length.should.equal(1);
     comments.length.should.equal(1);
     posts.length.should.equal(1);
 
@@ -118,12 +121,14 @@ describe('with MySQL client', () => {
     const author = await Author.forge().save();
     const post1 = await Post.forge().save({ authorId: author.get('author_id') });
     const post2 = await Post.forge().save({ authorId: author.get('author_id') });
+    const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
+    const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author.get('author_id') });
-    await Comment.forge().save({ postId: post1.get('post_id') });
-    await Comment.forge().save({ postId: post2.get('post_id') });
+    await Commenter.forge().save({ commentId: comment1.get('comment_id') });
+    await Commenter.forge().save({ commentId: comment2.get('comment_id') });
     await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
     await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
@@ -131,12 +136,14 @@ describe('with MySQL client', () => {
 
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
+    const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const posts = await Post.fetchAll();
     const tagPosts = await TagPost.fetchAll();
 
     accounts.length.should.equal(0);
     authors.length.should.equal(0);
+    commenters.length.should.equal(0);
     comments.length.should.equal(0);
     posts.length.should.equal(0);
     tagPosts.length.should.equal(0);
@@ -146,12 +153,14 @@ describe('with MySQL client', () => {
     const author = await Author.forge().save({ name: 'foobar' });
     const post1 = await Post.forge().save({ authorId: author.get('author_id') });
     const post2 = await Post.forge().save({ authorId: author.get('author_id') });
+    const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
+    const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author.get('author_id') });
-    await Comment.forge().save({ postId: post1.get('post_id') });
-    await Comment.forge().save({ postId: post2.get('post_id') });
+    await Commenter.forge().save({ commentId: comment1.get('comment_id') });
+    await Commenter.forge().save({ commentId: comment2.get('comment_id') });
     await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
     await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
@@ -159,12 +168,14 @@ describe('with MySQL client', () => {
 
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
+    const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const posts = await Post.fetchAll();
     const tagPosts = await TagPost.fetchAll();
 
     accounts.length.should.equal(0);
     authors.length.should.equal(0);
+    commenters.length.should.equal(0);
     comments.length.should.equal(0);
     posts.length.should.equal(0);
     tagPosts.length.should.equal(0);
@@ -175,13 +186,15 @@ describe('with MySQL client', () => {
     const author2 = await Author.forge().save();
     const post1 = await Post.forge().save({ authorId: author1.get('author_id') });
     const post2 = await Post.forge().save({ authorId: author2.get('author_id') });
+    const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
+    const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author1.get('author_id') });
     await Account.forge().save({ authorId: author2.get('author_id') });
-    await Comment.forge().save({ postId: post1.get('post_id') });
-    await Comment.forge().save({ postId: post2.get('post_id') });
+    await Commenter.forge().save({ commentId: comment1.get('comment_id') });
+    await Commenter.forge().save({ commentId: comment2.get('comment_id') });
     await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
     await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
@@ -189,12 +202,14 @@ describe('with MySQL client', () => {
 
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
+    const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const posts = await Post.fetchAll();
     const tagPosts = await TagPost.fetchAll();
 
     accounts.length.should.equal(1);
     authors.length.should.equal(1);
+    commenters.length.should.equal(1);
     comments.length.should.equal(1);
     posts.length.should.equal(1);
     tagPosts.length.should.equal(1);

@@ -33,6 +33,10 @@ export function recreateTables(repository) {
     .createTable('Comment', table => {
       table.increments('comment_id').primary();
       table.integer('postId').unsigned().references('Post.post_id');
+    })
+    .createTable('Commenter', table => {
+      table.increments('commenter_id').primary();
+      table.integer('commentId').unsigned().references('Comment.comment_id');
     });
 }
 
@@ -42,6 +46,7 @@ export function recreateTables(repository) {
 
 export async function clearTables(repository) {
   await repository.knex('Account').del();
+  await repository.knex('Commenter').del();
   await repository.knex('Comment').del();
   await repository.knex('TagPost').del();
   await repository.knex('Post').del();
@@ -57,6 +62,7 @@ export function dropTables(repository) {
   return repository.knex.schema
     .dropTable('TagPost')
     .dropTable('Account')
+    .dropTable('Commenter')
     .dropTable('Comment')
     .dropTable('Post')
     .dropTable('Tag')
@@ -73,9 +79,19 @@ export function fixtures(repository) {
     tableName: 'Account'
   });
 
+  const Commenter = repository.Model.extend({
+    idAttribute: 'commenter_id',
+    tableName: 'Commenter'
+  });
+
   const Comment = repository.Model.extend({
+    commenter() {
+      return this.hasOne(Commenter, 'commentId');
+    },
     idAttribute: 'comment_id',
     tableName: 'Comment'
+  }, {
+    dependents: ['commenter']
   });
 
   const Tag = repository.Model.extend({
@@ -114,5 +130,5 @@ export function fixtures(repository) {
     dependents: ['account', 'posts']
   });
 
-  return { Account, Author, Comment, Post, Tag, TagPost };
+  return { Account, Author, Comment, Commenter, Post, Tag, TagPost };
 }
