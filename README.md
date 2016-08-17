@@ -22,7 +22,7 @@ Require and register the `bookshelf-cascade-delete` plugin:
 var bookshelf = require('bookshelf')(knex);
 var cascadeDelete = require('bookshelf-cascade-delete');
 
-// You need to access the `default` property since the plugin is transpilled from es6 modules syntax.
+// You need to access the `default` property since the plugin is transpiled from es6 modules syntax.
 bookshelf.plugin(cascadeDelete.default);
 ```
 
