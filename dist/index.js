@@ -107,3 +107,5 @@ exports.default = function (Bookshelf) {
     }
   });
 };
+
+module.exports = exports['default'];

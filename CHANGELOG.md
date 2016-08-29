@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0](https://github.com/seegno/bookshelf-cascade-delete/tree/2.0.0) (2016-08-29)
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.5...2.0.0)
+
+**Merged pull requests:**
+
+- Add babel-plugin-add-module-exports [\#23](https://github.com/seegno/bookshelf-cascade-delete/pull/23) ([abelsoares](https://github.com/abelsoares))
+- Fixes typo in README.md [\#22](https://github.com/seegno/bookshelf-cascade-delete/pull/22) ([kamronbatman](https://github.com/kamronbatman))
+
 ## [1.0.5](https://github.com/seegno/bookshelf-cascade-delete/tree/1.0.5) (2016-07-20)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.4...1.0.5)
 
