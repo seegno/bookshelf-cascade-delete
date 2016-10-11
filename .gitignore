@@ -2,3 +2,4 @@
 /test/coverage
 /test/mysql/knexfile.js
 /test/postgres/knexfile.js
+/.nyc_output
