@@ -42,6 +42,12 @@ var Author = bookshelf.Model.extend({
 });
 ```
 
+It's possible to disable the cascade delete operations with the `cascadeDelete` option:
+
+```js
+model.destroy({ cascadeDelete: false });
+```
+
 **NOTE:** This plugin extends the `destroy` method of Bookshelf's `Model`, so if you are extending or overriding it on your models make sure to call its prototype after your work is done:
 
 ```js
