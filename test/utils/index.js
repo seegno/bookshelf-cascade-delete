@@ -6,18 +6,30 @@
 export function recreateTables(repository) {
   return repository.knex.schema
     .dropTableIfExists('Account')
+    .dropTableIfExists('CommenterAccount')
+    .dropTableIfExists('Commenter')
     .dropTableIfExists('Comment')
     .dropTableIfExists('TagPost')
+    .dropTableIfExists('PostMetadata')
     .dropTableIfExists('Post')
     .dropTableIfExists('Tag')
+    .dropTableIfExists('Locale')
+    .dropTableIfExists('AuthorMetadata')
     .dropTableIfExists('Author')
     .createTable('Author', table => {
       table.increments('author_id').primary();
-      table.string('name');
+      table.string('name').unique();
+    })
+    .createTable('AuthorMetadata', table => {
+      table.increments('id').primary();
+      table.string('author').references('Author.name');
     })
     .createTable('Account', table => {
       table.increments('account_id').primary();
       table.integer('authorId').unsigned().references('Author.author_id');
+    })
+    .createTable('Locale', table => {
+      table.string('isoCode').primary();
     })
     .createTable('Tag', table => {
       table.increments('tag_id').primary();
@@ -25,6 +37,11 @@ export function recreateTables(repository) {
     .createTable('Post', table => {
       table.increments('post_id').primary();
       table.integer('authorId').unsigned().references('Author.author_id');
+      table.string('title').unique();
+    })
+    .createTable('PostMetadata', table => {
+      table.string('post').references('Post.title');
+      table.string('code').references('Locale.isoCode');
     })
     .createTable('TagPost', table => {
       table.integer('tagId').unsigned().references('Tag.tag_id');
@@ -37,6 +54,10 @@ export function recreateTables(repository) {
     .createTable('Commenter', table => {
       table.increments('commenter_id').primary();
       table.integer('commentId').unsigned().references('Comment.comment_id');
+      table.string('name').unique();
+    })
+    .createTable('CommenterAccount', table => {
+      table.string('commenter').primary().references('Commenter.name');
     });
 }
 
@@ -46,11 +67,15 @@ export function recreateTables(repository) {
 
 export async function clearTables(repository) {
   await repository.knex('Account').del();
+  await repository.knex('CommenterAccount').del();
   await repository.knex('Commenter').del();
   await repository.knex('Comment').del();
+  await repository.knex('PostMetadata').del();
+  await repository.knex('Locale').del();
   await repository.knex('TagPost').del();
   await repository.knex('Post').del();
   await repository.knex('Tag').del();
+  await repository.knex('AuthorMetadata').del();
   await repository.knex('Author').del();
 }
 
@@ -62,10 +87,14 @@ export function dropTables(repository) {
   return repository.knex.schema
     .dropTable('TagPost')
     .dropTable('Account')
+    .dropTable('CommenterAccount')
     .dropTable('Commenter')
     .dropTable('Comment')
+    .dropTable('PostMetadata')
+    .dropTable('Locale')
     .dropTable('Post')
     .dropTable('Tag')
+    .dropTable('AuthorMetadata')
     .dropTable('Author');
 }
 
@@ -79,9 +108,24 @@ export function fixtures(repository) {
     tableName: 'Account'
   });
 
+  const CommenterAccount = repository.Model.extend({
+    idAttribute: 'commenter',
+    tableName: 'CommenterAccount'
+  });
+
   const Commenter = repository.Model.extend({
+    account() {
+      return this.belongsTo(CommenterAccount, 'name', 'commenter');
+    },
     idAttribute: 'commenter_id',
     tableName: 'Commenter'
+  }, {
+    dependents: ['account']
+  });
+
+  const Locale = repository.Model.extend({
+    idAttribute: 'isoCode',
+    tableName: 'Locale'
   });
 
   const Comment = repository.Model.extend({
@@ -104,17 +148,29 @@ export function fixtures(repository) {
     tableName: 'TagPost'
   });
 
+  const PostMetadata = repository.Model.extend({
+    idAttribute: null,
+    tableName: 'PostMetadata'
+  });
+
   const Post = repository.Model.extend({
     comments() {
       return this.hasMany(Comment, 'postId');
     },
+    idAttribute: 'post_id',
+    metadata() {
+      return this.belongsToMany(Locale, 'PostMetadata', 'post', 'code', 'title', 'isoCode');
+    },
+    tableName: 'Post',
     tags() {
       return this.belongsToMany(Tag, 'TagPost', 'postId', 'tagId');
-    },
-    idAttribute: 'post_id',
-    tableName: 'Post'
+    }
   }, {
-    dependents: ['comments', 'tags']
+    dependents: ['comments', 'tags', 'metadata']
+  });
+
+  const AuthorMetadata = repository.Model.extend({
+    tableName: 'AuthorMetadata'
   });
 
   const Author = repository.Model.extend({
@@ -122,13 +178,28 @@ export function fixtures(repository) {
       return this.hasOne(Account, 'authorId');
     },
     idAttribute: 'author_id',
+    metadata() {
+      return this.hasOne(AuthorMetadata, 'author', 'name');
+    },
     posts() {
       return this.hasMany(Post, 'authorId');
     },
     tableName: 'Author'
   }, {
-    dependents: ['account', 'posts']
+    dependents: ['account', 'metadata', 'posts']
   });
 
-  return { Account, Author, Comment, Commenter, Post, Tag, TagPost };
+  return {
+    Account,
+    Author,
+    AuthorMetadata,
+    Comment,
+    Commenter,
+    CommenterAccount,
+    Locale,
+    Post,
+    PostMetadata,
+    Tag,
+    TagPost
+  };
 }
