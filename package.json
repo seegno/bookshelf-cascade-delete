@@ -24,7 +24,7 @@
   ],
   "options": {
     "isparta": "--dir test/coverage",
-    "mocha": "--compilers js:babel-register --bail test/index.js"
+    "mocha": "-t 10000 -b --compilers js:babel-register test/index.js"
   },
   "scripts": {
     "changelog": "github_changelog_generator --bug-labels --enhancement-labels --future-release=$npm_config_release --header-label='# Changelog'",
