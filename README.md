@@ -42,13 +42,52 @@ var Author = bookshelf.Model.extend({
 });
 ```
 
-It's possible to disable the cascade delete operations with the `cascadeDelete` option:
+If you're using the ES6 class syntax, define `dependents` as static property:
 
 ```js
-model.destroy({ cascadeDelete: false });
+class Author extends bookshelf.Model {
+  get tableName() {
+    return 'Author';
+  }
+
+  posts() {
+    return this.hasMany(Post);
+  }
+
+  static dependents = ['posts'];
+}
 ```
 
-**NOTE:** This plugin extends the `destroy` method of Bookshelf's `Model`, so if you are extending or overriding it on your models make sure to call its prototype after your work is done:
+Use `destroy` to delete your model:
+
+```js
+Author.forge({ id: 1 }).destroy();
+```
+
+A transaction is created and all the cascade queries executed:
+
+```sql
+DELETE FROM "Post" where "author_id" IN (1)
+DELETE FROM "Author" where "id" IN (1)
+```
+
+You can pass an existing transaction as you would normally do:
+
+```js
+bookshelf.transaction(function(transaction) {
+  return Author.forge({ id: 1 }).destroy({ transacting: transaction })
+}).then(function() {
+  return Author.forge({ id: 2 }).destroy({ transacting: transaction })
+});
+```
+
+It's possible to disable the cascade delete with the `cascadeDelete` option:
+
+```js
+Author.forge({ id: 1 }).destroy({ cascadeDelete: false });
+```
+
+Since this plugin extends the `destroy` method, if you're extending or overriding it on your models make sure to call its prototype after your work is done:
 
 ```js
 var Author = bookshelf.Model.extend({
