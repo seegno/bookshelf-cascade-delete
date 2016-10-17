@@ -26,13 +26,15 @@ export default Bookshelf => {
     }
 
     return reduce(this.dependents, (result, dependent) => {
-      const { relatedData } = this.prototype[dependent]();
+      const relation = this.prototype[dependent]();
+      const { _knex, relatedData } = relation;
       const { foreignKeyTarget, parentIdAttribute, target, type } = relatedData;
 
       return [
         ...result, {
           key: type === 'belongsTo' && foreignKeyTarget ? foreignKeyTarget : relatedData.key('foreignKey'),
           parentIdAttribute,
+          query: _knex,
           skipDependents: type === 'belongsToMany',
           tableName: type === 'belongsToMany' ? relatedData.joinTable() : target.prototype.tableName,
           target
@@ -73,16 +75,18 @@ export default Bookshelf => {
   function recursiveDeletes(parent) {
     // Build delete queries for each dependent.
     return reduce(dependencyMap.call(this), (result, dependent) => {
-      const { key, parentIdAttribute, skipDependents, tableName, target } = dependent;
+      const { key, parentIdAttribute, query, skipDependents, tableName, target } = dependent;
       const parentValue = getParentValue(parent, parentIdAttribute);
-      const whereClause = `${quoteColumns ? `"${key}"` : key} IN (${parentValue})`;
+      const queryBuilder = query ? query : knex(tableName)
+
+      queryBuilder.whereRaw(`${quoteColumns ? `"${key}"` : key} IN (${parentValue})`);
 
       // Add dependent delete query.
-      result.push(transaction => transaction(tableName).del().whereRaw(whereClause));
+      result.push(transaction => queryBuilder.clone().transacting(transaction).del());
 
       // Add dependent's cascade delete queries.
       if (!skipDependents) {
-        result.push(recursiveDeletes.call(target, knex(tableName).whereRaw(whereClause)));
+        result.push(recursiveDeletes.call(target, queryBuilder));
       }
 
       return result;

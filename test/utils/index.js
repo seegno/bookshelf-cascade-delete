@@ -16,6 +16,7 @@ export function recreateTables(repository) {
     .dropTableIfExists('Locale')
     .dropTableIfExists('AuthorMetadata')
     .dropTableIfExists('Author')
+    .dropTableIfExists('Metadata')
     .createTable('Author', table => {
       table.increments('author_id').primary();
       table.string('name').unique();
@@ -58,6 +59,11 @@ export function recreateTables(repository) {
     })
     .createTable('CommenterAccount', table => {
       table.string('commenter').primary().references('Commenter.name');
+    })
+    .createTable('Metadata', table => {
+      table.increments('id').primary();
+      table.string('type');
+      table.integer('target').unsigned();
     });
 }
 
@@ -77,6 +83,7 @@ export async function clearTables(repository) {
   await repository.knex('Tag').del();
   await repository.knex('AuthorMetadata').del();
   await repository.knex('Author').del();
+  await repository.knex('Metadata').del();
 }
 
 /**
@@ -95,7 +102,8 @@ export function dropTables(repository) {
     .dropTable('Post')
     .dropTable('Tag')
     .dropTable('AuthorMetadata')
-    .dropTable('Author');
+    .dropTable('Author')
+    .dropTable('Metadata');
 }
 
 /**
@@ -113,14 +121,21 @@ export function fixtures(repository) {
     tableName: 'CommenterAccount'
   });
 
+  const CommenterMetadata = repository.Model.extend({
+    tableName: 'Metadata'
+  });
+
   const Commenter = repository.Model.extend({
     account() {
       return this.belongsTo(CommenterAccount, 'name', 'commenter');
     },
     idAttribute: 'commenter_id',
+    metadata() {
+      return this.hasMany(CommenterMetadata, 'target').query({ where: { type: 'commenter' } });
+    },
     tableName: 'Commenter'
   }, {
-    dependents: ['account']
+    dependents: ['account', 'metadata']
   });
 
   const Locale = repository.Model.extend({
@@ -196,6 +211,7 @@ export function fixtures(repository) {
     Comment,
     Commenter,
     CommenterAccount,
+    CommenterMetadata,
     Locale,
     Post,
     PostMetadata,

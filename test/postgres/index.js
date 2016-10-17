@@ -28,6 +28,7 @@ describe('with PostgreSQL client', () => {
     Comment,
     Commenter,
     CommenterAccount,
+    CommenterMetadata,
     Locale,
     Post,
     PostMetadata,
@@ -77,11 +78,26 @@ describe('with PostgreSQL client', () => {
 
   it('should not delete model and its dependents if an error is thrown on destroy', async () => {
     const author = await Author.forge().save({ name: 'foobar' });
-    const post = await Post.forge().save({ authorId: author.get('author_id') });
-    const comment = await Comment.forge().save({ postId: post.get('post_id') });
+    const post1 = await Post.forge().save({ authorId: author.get('author_id'), title: 'qux' });
+    const post2 = await Post.forge().save({ authorId: author.get('author_id'), title: 'qix' });
+    const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
+    const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
+    const commenter1 = await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'foo' });
+    const commenter2 = await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'bar' });
+    const tag1 = await Tag.forge().save();
+    const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author.get('author_id') });
-    await Commenter.forge().save({ commentId: comment.get('comment_id') });
+    await AuthorMetadata.forge().save({ author: 'foobar' });
+    await CommenterAccount.forge().save({ commenter: 'foo' });
+    await CommenterAccount.forge().save({ commenter: 'bar' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'commenter' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'commenter' });
+    await Locale.forge().save({ isoCode: 'biz' });
+    await PostMetadata.forge().save({ code: 'biz', post: 'qux' });
+    await PostMetadata.forge().save({ code: 'biz', post: 'qix' });
+    await TagPost.forge().save({ postId: post1.get('post_id'), tagId: tag1.get('tag_id') });
+    await TagPost.forge().save({ postId: post2.get('post_id'), tagId: tag2.get('tag_id') });
 
     sinon.stub(Model, 'destroy').throws(new Error('foobar'));
 
@@ -95,15 +111,30 @@ describe('with PostgreSQL client', () => {
 
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
+    const authorsMetadata = await AuthorMetadata.fetchAll();
+    const commenterAccounts = await CommenterAccount.fetchAll();
+    const commenterMetadata = await CommenterMetadata.fetchAll();
     const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
+    const locales = await Locale.fetchAll();
     const posts = await Post.fetchAll();
+    const postsMetadata = await PostMetadata.fetchAll();
+    const tagPosts = await TagPost.fetchAll();
+    const tags = await Tag.fetchAll();
 
     accounts.length.should.equal(1);
     authors.length.should.equal(1);
-    commenters.length.should.equal(1);
-    comments.length.should.equal(1);
-    posts.length.should.equal(1);
+    authorsMetadata.length.should.equal(1);
+    commenterAccounts.length.should.equal(2);
+    commenterMetadata.length.should.equal(2);
+    commenters.length.should.equal(2);
+    comments.length.should.equal(2);
+    posts.length.should.equal(2);
+    postsMetadata.length.should.equal(2);
+    tagPosts.length.should.equal(2);
+
+    locales.length.should.equal(1);
+    tags.length.should.equal(2);
 
     sinon.restore(Model);
   });
@@ -139,21 +170,25 @@ describe('with PostgreSQL client', () => {
     sinon.restore(Model);
   });
 
-  it('should delete model and all its dependents', async () => {
+ it('should delete model and all its dependents', async () => {
     const author = await Author.forge().save({ name: 'foobar' });
     const post1 = await Post.forge().save({ authorId: author.get('author_id'), title: 'qux' });
     const post2 = await Post.forge().save({ authorId: author.get('author_id'), title: 'qix' });
     const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
     const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
+    const commenter1 = await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'foo' });
+    const commenter2 = await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'bar' });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author.get('author_id') });
     await AuthorMetadata.forge().save({ author: 'foobar' });
-    await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'foo' });
-    await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'bar' });
     await CommenterAccount.forge().save({ commenter: 'foo' });
     await CommenterAccount.forge().save({ commenter: 'bar' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'bez' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'commenter' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'bez' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'commenter' });
     await Locale.forge().save({ isoCode: 'biz' });
     await PostMetadata.forge().save({ code: 'biz', post: 'qux' });
     await PostMetadata.forge().save({ code: 'biz', post: 'qix' });
@@ -166,6 +201,7 @@ describe('with PostgreSQL client', () => {
     const authors = await Author.fetchAll();
     const authorsMetadata = await AuthorMetadata.fetchAll();
     const commenterAccounts = await CommenterAccount.fetchAll();
+    const commenterMetadata = await CommenterMetadata.fetchAll();
     const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const locales = await Locale.fetchAll();
@@ -184,6 +220,7 @@ describe('with PostgreSQL client', () => {
     postsMetadata.length.should.equal(0);
     tagPosts.length.should.equal(0);
 
+    commenterMetadata.length.should.equal(2);
     locales.length.should.equal(1);
     tags.length.should.equal(2);
   });
@@ -194,15 +231,19 @@ describe('with PostgreSQL client', () => {
     const post2 = await Post.forge().save({ authorId: author.get('author_id'), title: 'qix' });
     const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
     const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
+    const commenter1 = await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'foo' });
+    const commenter2 = await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'bar' });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
     await Account.forge().save({ authorId: author.get('author_id') });
     await AuthorMetadata.forge().save({ author: 'foobar' });
-    await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'foo' });
-    await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'bar' });
     await CommenterAccount.forge().save({ commenter: 'foo' });
     await CommenterAccount.forge().save({ commenter: 'bar' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'bez' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'commenter' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'bez' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'commenter' });
     await Locale.forge().save({ isoCode: 'biz' });
     await PostMetadata.forge().save({ code: 'biz', post: 'qux' });
     await PostMetadata.forge().save({ code: 'biz', post: 'qix' });
@@ -215,6 +256,7 @@ describe('with PostgreSQL client', () => {
     const authors = await Author.fetchAll();
     const authorsMetadata = await AuthorMetadata.fetchAll();
     const commenterAccounts = await CommenterAccount.fetchAll();
+    const commenterMetadata = await CommenterMetadata.fetchAll();
     const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const locales = await Locale.fetchAll();
@@ -233,6 +275,7 @@ describe('with PostgreSQL client', () => {
     postsMetadata.length.should.equal(0);
     tagPosts.length.should.equal(0);
 
+    commenterMetadata.length.should.equal(2);
     locales.length.should.equal(1);
     tags.length.should.equal(2);
   });
@@ -244,6 +287,8 @@ describe('with PostgreSQL client', () => {
     const post2 = await Post.forge().save({ authorId: author2.get('author_id'), title: 'baz' });
     const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
     const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
+    const commenter1 = await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'qux' });
+    const commenter2 = await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'qix' });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
@@ -251,10 +296,12 @@ describe('with PostgreSQL client', () => {
     await Account.forge().save({ authorId: author2.get('author_id') });
     await AuthorMetadata.forge().save({ author: 'foo' });
     await AuthorMetadata.forge().save({ author: 'bar' });
-    await Commenter.forge().save({ commentId: comment1.get('comment_id'), name: 'qux' });
-    await Commenter.forge().save({ commentId: comment2.get('comment_id'), name: 'qix' });
     await CommenterAccount.forge().save({ commenter: 'qux' });
     await CommenterAccount.forge().save({ commenter: 'qix' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'commenter' });
+    await CommenterMetadata.forge().save({ target: commenter1.get('commenter_id'), type: 'bez' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'commenter' });
+    await CommenterMetadata.forge().save({ target: commenter2.get('commenter_id'), type: 'bez' });
     await Locale.forge().save({ isoCode: 'buz' });
     await PostMetadata.forge().save({ code: 'buz', post: 'biz' });
     await PostMetadata.forge().save({ code: 'buz', post: 'baz' });
@@ -267,6 +314,7 @@ describe('with PostgreSQL client', () => {
     const authors = await Author.fetchAll();
     const authorsMetadata = await AuthorMetadata.fetchAll();
     const commenterAccounts = await CommenterAccount.fetchAll();
+    const commenterMetadata = await CommenterMetadata.fetchAll();
     const commenters = await Commenter.fetchAll();
     const comments = await Comment.fetchAll();
     const locales = await Locale.fetchAll();
@@ -285,6 +333,7 @@ describe('with PostgreSQL client', () => {
     postsMetadata.length.should.equal(1);
     tagPosts.length.should.equal(1);
 
+    commenterMetadata.length.should.equal(3);
     locales.length.should.equal(1);
     tags.length.should.equal(2);
   });
