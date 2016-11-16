@@ -21,7 +21,7 @@ describe('with PostgreSQL client', () => {
 
   repository.plugin(cascadeDelete);
 
-  const { Account, Author, Comment, Commenter, Post, Tag, TagPost } = fixtures(repository);
+  const { Account, Author, Comment, CommentMetadata, Commenter, Post, Tag, TagPost } = fixtures(repository);
 
   before(async () => {
     await recreateTables(repository);
@@ -117,12 +117,14 @@ describe('with PostgreSQL client', () => {
     sinon.restore(Model);
   });
 
-  it('should delete model and all its dependents', async () => {
+  it.only('should delete model and all its dependents', async () => {
     const author = await Author.forge().save();
     const post1 = await Post.forge().save({ authorId: author.get('author_id') });
     const post2 = await Post.forge().save({ authorId: author.get('author_id') });
-    const comment1 = await Comment.forge().save({ postId: post1.get('post_id') });
-    const comment2 = await Comment.forge().save({ postId: post2.get('post_id') });
+    const commentMetadata1 = await CommentMetadata.forge().save();
+    const commentMetadata2 = await CommentMetadata.forge().save();
+    const comment1 = await Comment.forge().save({ CommentMetadata_id: commentMetadata1.get('id'), postId: post1.get('post_id'), });
+    const comment2 = await Comment.forge().save({ CommentMetadata_id: commentMetadata2.get('id'), postId: post2.get('post_id') });
     const tag1 = await Tag.forge().save();
     const tag2 = await Tag.forge().save();
 
@@ -137,6 +139,7 @@ describe('with PostgreSQL client', () => {
     const accounts = await Account.fetchAll();
     const authors = await Author.fetchAll();
     const commenters = await Commenter.fetchAll();
+    const commentMetadata = await CommentMetadata.fetchAll();
     const comments = await Comment.fetchAll();
     const posts = await Post.fetchAll();
     const tagPosts = await TagPost.fetchAll();
@@ -144,6 +147,7 @@ describe('with PostgreSQL client', () => {
     accounts.length.should.equal(0);
     authors.length.should.equal(0);
     commenters.length.should.equal(0);
+    commentMetadata.length.should.equal(0);
     comments.length.should.equal(0);
     posts.length.should.equal(0);
     tagPosts.length.should.equal(0);

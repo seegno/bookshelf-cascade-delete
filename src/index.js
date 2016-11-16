@@ -29,9 +29,14 @@ export default Bookshelf => {
       const { relatedData } = this.prototype[dependent]();
       const skipDependents = relatedData.type === 'belongsToMany';
 
+      if (skipDependents) {
+        console.log(relatedData);
+      }
+
+      console.log(this.dependents);
+
       return [
         ...result, {
-          dependents: dependencyMap.call(relatedData.target, skipDependents),
           key: relatedData.key('foreignKey'),
           model: relatedData.target,
           skipDependents,
@@ -46,6 +51,8 @@ export default Bookshelf => {
    */
 
   function recursiveDeletes(parent) {
+    console.log(this.prototype.tableName);
+
     // Stringify in case of parent being an instance of query.
     const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
     const dependencies = dependencyMap.call(this);
