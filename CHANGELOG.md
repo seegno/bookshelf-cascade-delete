@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.1](https://github.com/seegno/bookshelf-cascade-delete/tree/2.0.1) (2016-12-13)
+[Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/2.0.0...2.0.1)
+
+**Closed issues:**
+
+- Self relations [\#30](https://github.com/seegno/bookshelf-cascade-delete/issues/30)
+- Can't attach on destroy events of cascaded delete [\#10](https://github.com/seegno/bookshelf-cascade-delete/issues/10)
+
+**Merged pull requests:**
+
+- Add user to postgres knexfile [\#33](https://github.com/seegno/bookshelf-cascade-delete/pull/33) ([ricardogama](https://github.com/ricardogama))
+- Add class syntax documentation [\#32](https://github.com/seegno/bookshelf-cascade-delete/pull/32) ([ricardogama](https://github.com/ricardogama))
+- Add node 6 to travis configuration file [\#29](https://github.com/seegno/bookshelf-cascade-delete/pull/29) ([ricardogama](https://github.com/ricardogama))
+- Update test coverage scripts to use nyc [\#28](https://github.com/seegno/bookshelf-cascade-delete/pull/28) ([ricardogama](https://github.com/ricardogama))
+- Add timeout option to test script [\#27](https://github.com/seegno/bookshelf-cascade-delete/pull/27) ([ricardogama](https://github.com/ricardogama))
+- Add cascadeDelete option documentation [\#26](https://github.com/seegno/bookshelf-cascade-delete/pull/26) ([ricardogama](https://github.com/ricardogama))
+- Remove auxiliar methods from Model prototype [\#24](https://github.com/seegno/bookshelf-cascade-delete/pull/24) ([ricardogama](https://github.com/ricardogama))
+
 ## [2.0.0](https://github.com/seegno/bookshelf-cascade-delete/tree/2.0.0) (2016-08-29)
 [Full Changelog](https://github.com/seegno/bookshelf-cascade-delete/compare/1.0.5...2.0.0)
 
