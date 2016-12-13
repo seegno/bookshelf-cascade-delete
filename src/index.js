@@ -20,25 +20,52 @@ export default Bookshelf => {
    * Dependency map.
    */
 
-  function dependencyMap(skipDependents = false) {
-    if (skipDependents || !this.dependents) {
+  function dependencyMap() {
+    if (!this.dependents) {
       return;
     }
 
     return reduce(this.dependents, (result, dependent) => {
-      const { relatedData } = this.prototype[dependent]();
-      const skipDependents = relatedData.type === 'belongsToMany';
+      const relation = this.prototype[dependent]();
+      const { _knex, relatedData } = relation;
+      const { foreignKeyTarget, parentIdAttribute, target, type } = relatedData;
 
       return [
         ...result, {
-          dependents: dependencyMap.call(relatedData.target, skipDependents),
-          key: relatedData.key('foreignKey'),
-          model: relatedData.target,
-          skipDependents,
-          tableName: skipDependents ? relatedData.joinTable() : relatedData.target.prototype.tableName
+          key: type === 'belongsTo' && foreignKeyTarget ? foreignKeyTarget : relatedData.key('foreignKey'),
+          parentIdAttribute,
+          query: _knex,
+          skipDependents: type === 'belongsToMany',
+          tableName: type === 'belongsToMany' ? relatedData.joinTable() : target.prototype.tableName,
+          target
         }
       ];
     }, []);
+  }
+
+  /**
+   * Get parent value.
+   */
+
+  function getParentValue(parent, parentIdAttribute) {
+    // Stringify in case of parent being an instance of query.
+    if (parent instanceof Bookshelf.Model === false) {
+      return parent.clone().column(parentIdAttribute).toString();
+    }
+
+    if (parent._knex) {
+      // Add parent id attribute as select column for current parent query.
+      return parent._knex.clone().column(parentIdAttribute).toString();
+    }
+
+    const parentId = parent.get(parentIdAttribute);
+
+    if (!parentId) {
+      throw new Error(`Missing relation parent id attribute "${parentIdAttribute}" for cascade`);
+    }
+
+    // Quote parent id attribute value.
+    return `'${parent.get(parentIdAttribute)}'`;
   }
 
   /**
@@ -46,19 +73,23 @@ export default Bookshelf => {
    */
 
   function recursiveDeletes(parent) {
-    // Stringify in case of parent being an instance of query.
-    const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
-    const dependencies = dependencyMap.call(this);
-
     // Build delete queries for each dependent.
-    return reduce(dependencies, (result, { tableName, key, model, skipDependents }) => {
-      const whereClause = `${quoteColumns ? `"${key}"` : key} IN (${parentValue})`;
+    return reduce(dependencyMap.call(this), (result, dependent) => {
+      const { key, parentIdAttribute, query, skipDependents, tableName, target } = dependent;
+      const parentValue = getParentValue(parent, parentIdAttribute);
+      const queryBuilder = query ? query : knex(tableName)
 
-      return [
-        ...result,
-        transaction => transaction(tableName).del().whereRaw(whereClause),
-        skipDependents ? [] : recursiveDeletes.call(model, knex(tableName).column(model.prototype.idAttribute).whereRaw(whereClause))
-      ];
+      queryBuilder.whereRaw(`${quoteColumns ? `"${key}"` : key} IN (${parentValue})`);
+
+      // Add dependent delete query.
+      result.push(transaction => queryBuilder.clone().transacting(transaction).del());
+
+      // Add dependent's cascade delete queries.
+      if (!skipDependents) {
+        result.push(recursiveDeletes.call(target, queryBuilder));
+      }
+
+      return result;
     }, []);
   }
 
@@ -67,8 +98,7 @@ export default Bookshelf => {
    */
 
   function cascadeDelete(transacting, options) {
-    const id = this.get(this.idAttribute) || this._knex.column(this.idAttribute);
-    const queries = recursiveDeletes.call(this.constructor, id);
+    const queries = recursiveDeletes.call(this.constructor, this);
 
     return mapSeries(flattenDeep(queries).reverse(), query => query(transacting))
       .then(() => Model.destroy.call(this, {
@@ -82,9 +112,7 @@ export default Bookshelf => {
    */
 
   Bookshelf.Model = Bookshelf.Model.extend({
-    destroy(options) {
-      options = options || {};
-
+    destroy(options = {}) {
       if (options.cascadeDelete === false) {
         return Model.destroy.call(this, options);
       }
