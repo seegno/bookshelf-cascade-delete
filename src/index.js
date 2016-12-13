@@ -20,25 +20,50 @@ export default Bookshelf => {
    * Dependency map.
    */
 
-  function dependencyMap(skipDependents = false) {
-    if (skipDependents || !this.dependents) {
+  function dependencyMap() {
+    if (!this.dependents) {
       return;
     }
 
     return reduce(this.dependents, (result, dependent) => {
       const { relatedData } = this.prototype[dependent]();
-      const skipDependents = relatedData.type === 'belongsToMany';
+      const { foreignKeyTarget, parentIdAttribute, target, type } = relatedData;
 
       return [
         ...result, {
-          dependents: dependencyMap.call(relatedData.target, skipDependents),
-          key: relatedData.key('foreignKey'),
-          model: relatedData.target,
-          skipDependents,
-          tableName: skipDependents ? relatedData.joinTable() : relatedData.target.prototype.tableName
+          key: type === 'belongsTo' && foreignKeyTarget ? foreignKeyTarget : relatedData.key('foreignKey'),
+          parentIdAttribute,
+          skipDependents: type === 'belongsToMany',
+          tableName: type === 'belongsToMany' ? relatedData.joinTable() : target.prototype.tableName,
+          target
         }
       ];
     }, []);
+  }
+
+  /**
+   * Get parent value.
+   */
+
+  function getParentValue(parent, parentIdAttribute) {
+    // Stringify in case of parent being an instance of query.
+    if (parent instanceof Bookshelf.Model === false) {
+      return parent.clone().column(parentIdAttribute).toString();
+    }
+
+    if (parent._knex) {
+      // Add parent id attribute as select column for current parent query.
+      return parent._knex.clone().column(parentIdAttribute).toString();
+    }
+
+    const parentId = parent.get(parentIdAttribute);
+
+    if (!parentId) {
+      throw new Error(`Missing relation parent id attribute "${parentIdAttribute}" for cascade`);
+    }
+
+    // Quote parent id attribute value.
+    return `'${parent.get(parentIdAttribute)}'`;
   }
 
   /**
@@ -46,19 +71,21 @@ export default Bookshelf => {
    */
 
   function recursiveDeletes(parent) {
-    // Stringify in case of parent being an instance of query.
-    const parentValue = typeof parent === 'number' || typeof parent === 'string' ? `'${parent}'` : parent.toString();
-    const dependencies = dependencyMap.call(this);
-
     // Build delete queries for each dependent.
-    return reduce(dependencies, (result, { tableName, key, model, skipDependents }) => {
+    return reduce(dependencyMap.call(this), (result, dependent) => {
+      const { key, parentIdAttribute, skipDependents, tableName, target } = dependent;
+      const parentValue = getParentValue(parent, parentIdAttribute);
       const whereClause = `${quoteColumns ? `"${key}"` : key} IN (${parentValue})`;
 
-      return [
-        ...result,
-        transaction => transaction(tableName).del().whereRaw(whereClause),
-        skipDependents ? [] : recursiveDeletes.call(model, knex(tableName).column(model.prototype.idAttribute).whereRaw(whereClause))
-      ];
+      // Add dependent delete query.
+      result.push(transaction => transaction(tableName).del().whereRaw(whereClause));
+
+      // Add dependent's cascade delete queries.
+      if (!skipDependents) {
+        result.push(recursiveDeletes.call(target, knex(tableName).whereRaw(whereClause)));
+      }
+
+      return result;
     }, []);
   }
 
@@ -67,8 +94,7 @@ export default Bookshelf => {
    */
 
   function cascadeDelete(transacting, options) {
-    const id = this.get(this.idAttribute) || this._knex.column(this.idAttribute);
-    const queries = recursiveDeletes.call(this.constructor, id);
+    const queries = recursiveDeletes.call(this.constructor, this);
 
     return mapSeries(flattenDeep(queries).reverse(), query => query(transacting))
       .then(() => Model.destroy.call(this, {
@@ -82,9 +108,7 @@ export default Bookshelf => {
    */
 
   Bookshelf.Model = Bookshelf.Model.extend({
-    destroy(options) {
-      options = options || {};
-
+    destroy(options = {}) {
       if (options.cascadeDelete === false) {
         return Model.destroy.call(this, options);
       }
