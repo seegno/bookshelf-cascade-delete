@@ -20,18 +20,24 @@ export default Bookshelf => {
    * Dependency map.
    */
 
-  function dependencyMap(skipDependents = false) {
-    if (skipDependents || !this.dependents) {
+  function dependencyMap() {
+    if (!this.dependents) {
       return;
     }
 
     return reduce(this.dependents, (result, dependent) => {
-      const { relatedData } = this.prototype[dependent]();
+      let relatedData;
+
+      try {
+        relatedData = this.prototype[dependent]().relatedData;
+      } catch (e) {
+        return result;
+      }
+
       const skipDependents = relatedData.type === 'belongsToMany';
 
       return [
         ...result, {
-          dependents: dependencyMap.call(relatedData.target, skipDependents),
           key: relatedData.key('foreignKey'),
           model: relatedData.target,
           skipDependents,

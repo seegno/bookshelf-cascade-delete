@@ -8,6 +8,7 @@ export function recreateTables(repository) {
     .dropTableIfExists('Account')
     .dropTableIfExists('Comment')
     .dropTableIfExists('TagPost')
+    .dropTableIfExists('CommentMetadata')
     .dropTableIfExists('Post')
     .dropTableIfExists('Tag')
     .dropTableIfExists('Author')
@@ -26,6 +27,9 @@ export function recreateTables(repository) {
       table.increments('post_id').primary();
       table.integer('authorId').unsigned().references('Author.author_id');
     })
+    .createTable('CommentMetadata', table => {
+      table.increments('id').primary();
+    })
     .createTable('TagPost', table => {
       table.integer('tagId').unsigned().references('Tag.tag_id');
       table.integer('postId').unsigned().references('Post.post_id');
@@ -33,6 +37,7 @@ export function recreateTables(repository) {
     .createTable('Comment', table => {
       table.increments('comment_id').primary();
       table.integer('postId').unsigned().references('Post.post_id');
+      table.integer('metadata').unsigned().references('CommentMetadata.id');
     })
     .createTable('Commenter', table => {
       table.increments('commenter_id').primary();
@@ -49,6 +54,7 @@ export async function clearTables(repository) {
   await repository.knex('Commenter').del();
   await repository.knex('Comment').del();
   await repository.knex('TagPost').del();
+  await repository.knex('CommentMetadata').del();
   await repository.knex('Post').del();
   await repository.knex('Tag').del();
   await repository.knex('Author').del();
@@ -64,6 +70,7 @@ export function dropTables(repository) {
     .dropTable('Account')
     .dropTable('Commenter')
     .dropTable('Comment')
+    .dropTable('CommentMetadata')
     .dropTable('Post')
     .dropTable('Tag')
     .dropTable('Author');
@@ -84,14 +91,21 @@ export function fixtures(repository) {
     tableName: 'Commenter'
   });
 
+  const CommentMetadata = repository.Model.extend({
+    tableName: 'CommentMetadata'
+  });
+
   const Comment = repository.Model.extend({
     commenter() {
       return this.hasOne(Commenter, 'commentId');
     },
+    metadata() {
+      return this.belongsTo(CommentMetadata);
+    },
     idAttribute: 'comment_id',
     tableName: 'Comment'
   }, {
-    dependents: ['commenter']
+    dependents: ['commenter', 'metadata']
   });
 
   const Tag = repository.Model.extend({
@@ -130,5 +144,5 @@ export function fixtures(repository) {
     dependents: ['account', 'posts']
   });
 
-  return { Account, Author, Comment, Commenter, Post, Tag, TagPost };
+  return { Account, Author, Comment, CommentMetadata, Commenter, Post, Tag, TagPost };
 }
