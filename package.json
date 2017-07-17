@@ -23,7 +23,7 @@
     "delete"
   ],
   "options": {
-    "mocha": "-t 10000 -b --compilers js:babel-register test/index.js",
+    "mocha": "-t 10000 -b --compilers js:babel-register test/mysql test/postgres",
     "nyc": "--reporter=lcov --reporter=html --reporter=text-summary --report-dir test/coverage"
   },
   "scripts": {
